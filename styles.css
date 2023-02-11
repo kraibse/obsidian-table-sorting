@@ -6,3 +6,25 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+table,
+.cm-table-widget {
+	margin: 1.2rem auto;
+	padding: 1.2rem auto;
+	width: 100%;
+	box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.3);
+	border-radius: 0.4rem;
+}
+
+thead {
+	background: #1c1d1e;
+}
+
+tbody {
+	background: #23272e;
+}
+
+tbody tr:hover {
+	background-color: #444654 !important;
+	color: white;
+}
