@@ -1,7 +1,9 @@
 # Obsidian Table Sorting Plugin
 
 A plugin for the [Obsidian](https://obsidian.md) note-taking app that allows you to sort the rows of your tables by clicking on the `thead` elements.
- 
+
+![Obsidian Table Sorting Enabled](attachments/table_showcase.png)
+
 ## Features
 - Sort tables by clicking on the `thead` elements
 - Toggle between ascending and descending order with each subsequent click
