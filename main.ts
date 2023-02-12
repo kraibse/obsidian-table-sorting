@@ -6,20 +6,6 @@ export default class TableSort extends Plugin {
 	statusBarItem: HTMLElement;
 	statusBarReload: HTMLElement;
 
-	// const icons = {
-	// unsorted: color => `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray">
-	// 	<path d="M15 8H1l7-8zm0 1H1l7 7z" opacity=".2"/>
-	// </svg>`,
-	// 	ascending: color => `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray">
-	// 		<path d="M15 8H1l7-8z"/>
-	// 		<path d="M15 9H1l7 7z" opacity=".2"/>
-	// 	</svg>`,
-	// 	descending: color => `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray">
-	// 		<path d="M15 8H1l7-8z" opacity=".2"/>
-	// 		<path d="M15 9H1l7 7z"/>
-	// 	</svg>`
-	// };
-
 	lastSorted = {
 		columnIndex: 0,
 		isAscending: true
