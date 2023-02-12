@@ -8,18 +8,111 @@ export default class TableSort extends Plugin {
 	static Tables = class {
 		id: number;
 		column: number;
-		order: HTMLElement[];
-		sortMode: string;
+		theads: HTMLElement[];
+		currentOrder: HTMLElement[];
+		originalOrder: HTMLElement[];
+		sorting: string;
 	
-		constructor(id: number, order: HTMLElement[]) {
-			this.order = order || [];
+		constructor(id: number, element: HTMLTableElement) {
 			this.id = id || 0;
 			this.column = -1;
-			this.sortMode = "descending";
+			this.theads = this.getTableHeads(element);
+			this.currentOrder = this.getTableRows(element);
+			this.originalOrder = this.currentOrder;
+			this.sorting = "neutral";
+		}
+
+		fillTable(table: HTMLElement, rows: HTMLElement[]): void {
+			rows.forEach((row) => {
+				table.querySelector("tbody")?.appendChild(row);
+			});
+		}
+
+		getActiveColumn() {
+			return this.column;
+		}
+
+		getTableHeads(table: HTMLElement): HTMLElement[] {
+			return Array.from(table.querySelectorAll("th"));
+		}
+
+		getTableRows(table: HTMLElement): HTMLElement[] {
+			const rowElements = table.querySelectorAll("tr");
+			return Array.from(rowElements).splice(1, rowElements.length);
+		}
+
+		removeRows(rows: HTMLElement[]): void {
+			Array.from(rows).forEach((row) => {
+				row.remove();
+			});
+		}
+		
+		setActiveColumn(element: HTMLElement): void {
+			const index = Array.prototype.indexOf.call(this.theads, element);
+			return index;
+		}
+
+		sort(table: HTMLElement, th: HTMLElement) {
+			const sortColumnValue = (rowA: HTMLElement, rowB: HTMLElement) => {
+				const cellA = rowA.children[this.column] as HTMLTableCellElement;
+				const cellB = rowB.children[this.column] as HTMLTableCellElement;
+	
+				if (!cellA || !cellB) {
+					return 0;
+				}
+	
+				const valueA = cellA.textContent ? cellA.textContent.toLowerCase() : false;
+				const valueB = cellB.textContent ? cellB.textContent.toLowerCase() : false;
+	
+				return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+			};
+			if (this.sorting == "neutral") {
+				this.currentOrder = this.originalOrder;
+			}
+			else {	
+				this.currentOrder = Array.from(this.currentOrder).sort((rowA, rowB) => {
+					const comparison = sortColumnValue(rowA, rowB);
+					return (this.sorting === "ascending") ? -comparison : comparison;
+				});
+			}
+	
+			// this.removeRows();
+			this.fillTable(table, this.currentOrder);
+		}
+
+		updateActiveColumn(index: number): number {
+			return (this.column === index && this.sorting === "ascending") ? -1 : this.column;
+		}
+
+		updateIcons() {
+			this.theads.forEach((thead, index) => {
+				thead.classList.remove("neutral");
+				thead.classList.remove("ascending");
+				thead.classList.remove("descending");
+	
+				if (this.column === index) {
+					thead.classList.add(this.sorting);
+				} else {
+					thead.classList.add("neutral");
+				}
+			});
+		}
+
+		updateSortingMode(columnID: number) {
+			if (this.column !== columnID || this.sorting === "neutral") {
+				this.sorting = "descending";
+			}
+			else if (this.sorting === "ascending") {
+				this.sorting = "neutral";
+			}
+			else {
+				this.sorting = "ascending";
+			}
+			console.log("Switching to sort mode -> " + this.sorting);
 		}
 	}
 
-	storage: [] = [];
+	storage: any[] = [];
 
 	configuration = {
 		defaultID: 0,		// automatically incrementing
@@ -31,61 +124,38 @@ export default class TableSort extends Plugin {
 	originalOrder: { [key: string]: HTMLElement[] } = { };
 	sortModes: { [key: string]: string } = { };
 
-	private removeRows(rows: HTMLElement[]): void {
-		Array.from(rows).forEach((row) => {
-			row.remove();
-		});
-	}
-
-	private fillTable(table: HTMLElement, rows: HTMLElement[]): void {
-		rows.forEach((row) => {
-			table.querySelector("tbody")?.appendChild(row);
-		});
-	}
 
 	private getTableElement(th: HTMLElement): HTMLTableElement | undefined {
 		return th.closest("table") || undefined;
 	}
 
-	private getTableID(table: HTMLElement): string {
-		return table.getAttribute("id")?.replace("table-", "") || "-1";
+	private getTableID(table: HTMLElement): number {
+		const id = table.getAttribute("id")?.replace("table-", "");
+		return (id) ? parseInt(id) : this.configuration.defaultID++;
 	}
 
-	private getTableHeads(table: HTMLElement): NodeListOf < HTMLTableCellElement > {
-		return table.querySelectorAll("th");
-	}
+	// private getColumnIndex(thead: NodeListOf < HTMLElement > , th: HTMLElement): number {
+	// 	const columnID = Array.prototype.indexOf.call(thead, th);
+	// 	const lastColumn = this.configuration.lastColumn;
+	// 	if (lastColumn == columnID && this.sortModes[columnID] == "ascending") {	// reset to neutral
+	// 		return -1;
+	// 	}
+	// 	return columnID;
+	// }
 
-	private getTableRows(table: HTMLElement): HTMLElement[] {
-		const rowElements = table.querySelectorAll("tr");
-		return Array.from(rowElements).splice(1, rowElements.length);
-	}
-
-	private getColumnIndex(thead: NodeListOf < HTMLElement > , th: HTMLElement): number {
-		const columnID = Array.prototype.indexOf.call(thead, th);
-		const lastColumn = this.configuration.lastColumn;
-		if (lastColumn == columnID && this.sortModes[columnID] == "ascending") {	// reset to neutral
-			return -1;
-		}
-		return columnID;
-	}
-
-	private isNewTable(newID: number): boolean {
+	private isNewTable(id: number): boolean {
 		//  Return true if the user has selected a new table
-		const oldID = this.configuration.lastTable;
-		if (oldID === newID) {
-			return false;
-		}
-		return true;
+		return (this.storage.length >= id) ? false: true;
 	}
 
-	private loadConfig(id: string) {		
-		if (this.configuration.lastTable === id && this.configuration.lastColumn != -1) {
-			this.sortModes[id] = "descending";
-		}
-		this.configuration.lastTable = id;
-		this.configuration.lastColumn = -1;
-		this.sortModes.columnID = this.sortModes[id];
-	}
+	// private loadConfig(id: string) {		
+	// 	if (this.configuration.lastTable === id && this.configuration.lastColumn != -1) {
+	// 		this.sortModes[id] = "descending";
+	// 	}
+	// 	this.configuration.lastTable = id;
+	// 	this.configuration.lastColumn = -1;
+	// 	this.sortModes.columnID = this.sortModes[id];
+	// }
 
 	async onload() {
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
@@ -98,21 +168,28 @@ export default class TableSort extends Plugin {
 
 			if (element.tagName === "TH") {
 				evt.preventDefault();
-				const table: HTMLTableElement | undefined = this.getTableElement(element);
-				if (!table) {
+				
+				const tableElement: HTMLTableElement | undefined = this.getTableElement(element);
+				if (!tableElement) {
 					return;
 				}
-			
-				const tableID = this.getTableID(table);
-				const isNewTable = this.isNewTable(tableID);
 
-				if (tableID in this.originalOrder) {
-					this.loadConfig(tableID);
-				} else {
-					this.saveConfig(table);
+				const tableID: number = this.getTableID(tableElement);
+
+				let table;
+				if (this.isNewTable(tableID)) {
+					table = new TableSort.Tables(tableID, tableElement);
+					this.storage.push(table);
 				}
-				
-				this.sortTable(table, element);
+				else {
+					table = this.storage[tableID];
+				}
+
+				const columnID: number = table.updateActiveColumn(table.setActiveColumn(element));
+
+				table.updateSortingMode(columnID);
+				table.updateIcons();
+				table.sort(tableElement, element);
 			}
 		});
 
@@ -120,86 +197,17 @@ export default class TableSort extends Plugin {
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
 
-	saveConfig(table: HTMLElement) {
-		const tableID = table.getAttribute("id")?.replace("table-", "") || -1;
-		if (!tableID || tableID in this.originalOrder) {
-			return;
-		}
-		const tr: HTMLElement[] = this.getTableRows(table);
-		const id: string = (this.configuration.defaultID++).toString();
-		table.setAttribute("id", "table-" + id);
-		this.originalOrder[id] = tr;
-		this.sortModes[id] = "descending";
-	}
-
-	sortTable(table: HTMLElement, th: HTMLElement) {
-		const theads = this.getTableHeads(table);
-		const rows = this.getTableRows(table);
-		const columnID: number = this.getColumnIndex(theads, th);
-
-		this.updateSortingMode(columnID);
-		this.updateIcons(theads, columnID);
-
-		const sortColumnValue = (rowA: HTMLElement, rowB: HTMLElement) => {
-			const cellA = rowA.children[columnID] as HTMLTableCellElement;
-			const cellB = rowB.children[columnID] as HTMLTableCellElement;
-
-			if (!cellA || !cellB) {
-				return 0;
-			}
-
-			const valueA = cellA.textContent ? cellA.textContent.toLowerCase() : false;
-			const valueB = cellB.textContent ? cellB.textContent.toLowerCase() : false;
-
-			return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
-		};
-
-		let order: HTMLElement[];
-
-		if (this.sortModes[columnID] == "neutral") {
-			const tableID = this.getTableID(table);
-			order = this.originalOrder[tableID];
-		}
-		else {	
-			order = Array.from(rows).sort((rowA, rowB) => {
-				const comparison = sortColumnValue(rowA, rowB);
-				return (this.sortModes[columnID] === "ascending") ? -comparison : comparison;
-			});
-		}
-
-		this.removeRows(rows);
-		this.fillTable(table, order);
-	}
-
-	updateIcons(theads: NodeListOf < HTMLTableCellElement > , columnID: number) {
-		theads.forEach((thead, index) => {
-			thead.classList.remove("neutral");
-			thead.classList.remove("ascending");
-			thead.classList.remove("descending");
-
-			if (columnID === index) {
-				thead.classList.add(this.sortModes[columnID]);
-			} else {
-				thead.classList.add("neutral");
-			}
-		});
-	}
-
-	updateSortingMode(columnID: number) {
-		let mode: string;
-		if (this.sortModes[columnID] === "ascending") {
-			mode = "neutral";
-		}
-		else if (this.sortModes[columnID] === "descending") {
-			mode = "ascending";
-		}
-		else {
-			mode = "descending";
-		}
-		this.sortModes[columnID] = mode;
-		console.log("Switching to sort mode -> " + mode);
-		
-	}
+	// saveConfig(table: HTMLElement) {
+	// 	const tableID = table.getAttribute("id")?.replace("table-", "") || -1;
+	// 	if (!tableID || tableID in this.originalOrder) {
+	// 		return;
+	// 	}
+	// 	const tr: HTMLElement[] = this.getTableRows(table);
+	// 	// const id: string = (this.configuration.defaultID++).toString();
+	// 	table.setAttribute("id", "table-" + id);
+	// 	this.originalOrder[id] = tr;
+	// 	this.sortModes[id] = "descending";
+	// }
 
 	onunload() {
 
