@@ -2,17 +2,53 @@ import {
 	Plugin
 } from 'obsidian';
 
-export default class TableSort extends Plugin {
-	statusBarItem: HTMLElement;
-	statusBarReload: HTMLElement;
 
-	lastSorted = {
-		columnIndex: 0,
-		isAscending: true
+
+export default class TableSort extends Plugin {
+	static Tables = class {
+		id: number;
+		column: number;
+		order: HTMLElement[];
+		sortMode: string;
+	
+		constructor(id: number, order: HTMLElement[]) {
+			this.order = order || [];
+			this.id = id || 0;
+			this.column = -1;
+			this.sortMode = "descending";
+		}
+	}
+
+	storage: [] = [];
+
+	configuration = {
+		defaultID: 0,		// automatically incrementing
+		lastTable: -1,
+		lastColumn: -1,
+		sortMode: "neutral"
 	};
 
-	private getTableElement(th: HTMLElement): HTMLElement | undefined {
+	originalOrder: { [key: string]: HTMLElement[] } = { };
+	sortModes: { [key: string]: string } = { };
+
+	private removeRows(rows: HTMLElement[]): void {
+		Array.from(rows).forEach((row) => {
+			row.remove();
+		});
+	}
+
+	private fillTable(table: HTMLElement, rows: HTMLElement[]): void {
+		rows.forEach((row) => {
+			table.querySelector("tbody")?.appendChild(row);
+		});
+	}
+
+	private getTableElement(th: HTMLElement): HTMLTableElement | undefined {
 		return th.closest("table") || undefined;
+	}
+
+	private getTableID(table: HTMLElement): string {
+		return table.getAttribute("id")?.replace("table-", "") || "-1";
 	}
 
 	private getTableHeads(table: HTMLElement): NodeListOf < HTMLTableCellElement > {
@@ -25,27 +61,58 @@ export default class TableSort extends Plugin {
 	}
 
 	private getColumnIndex(thead: NodeListOf < HTMLElement > , th: HTMLElement): number {
-		return Array.prototype.indexOf.call(thead, th);
+		const columnID = Array.prototype.indexOf.call(thead, th);
+		const lastColumn = this.configuration.lastColumn;
+		if (lastColumn == columnID && this.sortModes[columnID] == "ascending") {	// reset to neutral
+			return -1;
+		}
+		return columnID;
+	}
+
+	private isNewTable(newID: number): boolean {
+		//  Return true if the user has selected a new table
+		const oldID = this.configuration.lastTable;
+		if (oldID === newID) {
+			return false;
+		}
+		return true;
+	}
+
+	private loadConfig(id: string) {		
+		if (this.configuration.lastTable === id && this.configuration.lastColumn != -1) {
+			this.sortModes[id] = "descending";
+		}
+		this.configuration.lastTable = id;
+		this.configuration.lastColumn = -1;
+		this.sortModes.columnID = this.sortModes[id];
 	}
 
 	async onload() {
-		console.log(this.needsDarkTheme());
-
-		const theads = document.querySelectorAll("th") as NodeListOf < HTMLTableCellElement > ;
-		this.updateIcons(theads, -1);
-
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
+		
+		this.originalOrder = {};
 		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			if (evt.target == null) {
-				return;
-			}
-
+			if (evt.target == null) { return; }
 			const element: HTMLElement = evt.target;
 
 			if (element.tagName === "TH") {
 				evt.preventDefault();
-				this.sortTable(element);
+				const table: HTMLTableElement | undefined = this.getTableElement(element);
+				if (!table) {
+					return;
+				}
+			
+				const tableID = this.getTableID(table);
+				const isNewTable = this.isNewTable(tableID);
+
+				if (tableID in this.originalOrder) {
+					this.loadConfig(tableID);
+				} else {
+					this.saveConfig(table);
+				}
+				
+				this.sortTable(table, element);
 			}
 		});
 
@@ -53,17 +120,22 @@ export default class TableSort extends Plugin {
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
 
-
-
-	sortTable(th: HTMLElement) {
-		const tableElement = this.getTableElement(th);
-		if (!tableElement) {
+	saveConfig(table: HTMLElement) {
+		const tableID = table.getAttribute("id")?.replace("table-", "") || -1;
+		if (!tableID || tableID in this.originalOrder) {
 			return;
 		}
+		const tr: HTMLElement[] = this.getTableRows(table);
+		const id: string = (this.configuration.defaultID++).toString();
+		table.setAttribute("id", "table-" + id);
+		this.originalOrder[id] = tr;
+		this.sortModes[id] = "descending";
+	}
 
-		const theads = this.getTableHeads(tableElement);
-		const rows = this.getTableRows(tableElement);
-		const columnID = this.getColumnIndex(theads, th);
+	sortTable(table: HTMLElement, th: HTMLElement) {
+		const theads = this.getTableHeads(table);
+		const rows = this.getTableRows(table);
+		const columnID: number = this.getColumnIndex(theads, th);
 
 		this.updateSortingMode(columnID);
 		this.updateIcons(theads, columnID);
@@ -82,21 +154,21 @@ export default class TableSort extends Plugin {
 			return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
 		};
 
-		// Sort the rows by the values in the sort column
-		const sortedRows = Array.from(rows).sort((rowA, rowB) => {
-			const comparison = sortColumnValue(rowA, rowB);
-			return this.lastSorted.isAscending ? comparison : -comparison;
-		});
+		let order: HTMLElement[];
 
-		// Remove all the rows from the table
-		Array.from(rows).forEach((row) => {
-			row.remove();
-		});
+		if (this.sortModes[columnID] == "neutral") {
+			const tableID = this.getTableID(table);
+			order = this.originalOrder[tableID];
+		}
+		else {	
+			order = Array.from(rows).sort((rowA, rowB) => {
+				const comparison = sortColumnValue(rowA, rowB);
+				return (this.sortModes[columnID] === "ascending") ? -comparison : comparison;
+			});
+		}
 
-		// Append the sorted rows to the table
-		sortedRows.forEach((row) => {
-			tableElement.querySelector("tbody").appendChild(row);
-		});
+		this.removeRows(rows);
+		this.fillTable(table, order);
 	}
 
 	updateIcons(theads: NodeListOf < HTMLTableCellElement > , columnID: number) {
@@ -105,10 +177,8 @@ export default class TableSort extends Plugin {
 			thead.classList.remove("ascending");
 			thead.classList.remove("descending");
 
-			console.log("Changing class on column " + index);
-
 			if (columnID === index) {
-				thead.classList.add(this.lastSorted.isAscending ? "ascending" : "descending");
+				thead.classList.add(this.sortModes[columnID]);
 			} else {
 				thead.classList.add("neutral");
 			}
@@ -116,12 +186,19 @@ export default class TableSort extends Plugin {
 	}
 
 	updateSortingMode(columnID: number) {
-		if (this.lastSorted.columnIndex === columnID) {
-			this.lastSorted.isAscending = !this.lastSorted.isAscending;
-		} else {
-			this.lastSorted.isAscending = true;
-			this.lastSorted.columnIndex = columnID;
+		let mode: string;
+		if (this.sortModes[columnID] === "ascending") {
+			mode = "neutral";
 		}
+		else if (this.sortModes[columnID] === "descending") {
+			mode = "ascending";
+		}
+		else {
+			mode = "descending";
+		}
+		this.sortModes[columnID] = mode;
+		console.log("Switching to sort mode -> " + mode);
+		
 	}
 
 	onunload() {
