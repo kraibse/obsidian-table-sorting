@@ -27,9 +27,9 @@ th::before, th.neutral::before {
 }
 
 th.ascending::before {
-	content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='gray'%3E%3Cpath d='M15 8H1l7-8z' opacity='.2'/%3E%3Cpath d='M15 9H1l7 7z'/%3E%3C/svg%3E");
+	content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='gray'%3E%3Cpath d='M15 8H1l7-8z'/%3E%3Cpath d='M15 9H1l7 7z' opacity='.2'/%3E%3C/svg%3E");
 }
 
 th.descending::before {
-	content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='gray'%3E%3Cpath d='M15 8H1l7-8z'/%3E%3Cpath d='M15 9H1l7 7z' opacity='.2'/%3E%3C/svg%3E");
+	content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='gray'%3E%3Cpath d='M15 8H1l7-8z' opacity='.2'/%3E%3Cpath d='M15 9H1l7 7z'/%3E%3C/svg%3E");
 }
