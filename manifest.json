@@ -5,7 +5,7 @@
 	"minAppVersion": "0.15.0",
 	"description": "This plugin allows you to sort tables by clicking on the respective table head.",
 	"author": "kraibse",
-	"authorUrl": "https://kraibse.github.io",
+	"authorUrl": "https://github.com/kraibse/",
 	"fundingUrl": "",
 	"isDesktopOnly": false
 }
