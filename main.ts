@@ -6,33 +6,47 @@ export default class TableSort extends Plugin {
 	statusBarItem: HTMLElement;
 	statusBarReload: HTMLElement;
 
-	const icons = {
-		unsorted: color => `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="${color}">
-			<path d="M15 8H1l7-8zm0 1H1l7 7z" opacity=".2"/>
-		</svg>`,
-		ascending: color => `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="${color}">
-			<path d="M15 8H1l7-8z"/>
-			<path d="M15 9H1l7 7z" opacity=".2"/>
-		</svg>`,
-		descending: color => `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="${color}">
-			<path d="M15 8H1l7-8z" opacity=".2"/>
-			<path d="M15 9H1l7 7z"/>
-		</svg>`
-	};
+	// const icons = {
+	// unsorted: color => `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray">
+	// 	<path d="M15 8H1l7-8zm0 1H1l7 7z" opacity=".2"/>
+	// </svg>`,
+	// 	ascending: color => `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray">
+	// 		<path d="M15 8H1l7-8z"/>
+	// 		<path d="M15 9H1l7 7z" opacity=".2"/>
+	// 	</svg>`,
+	// 	descending: color => `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray">
+	// 		<path d="M15 8H1l7-8z" opacity=".2"/>
+	// 		<path d="M15 9H1l7 7z"/>
+	// 	</svg>`
+	// };
 
 	lastSorted = {
 		columnIndex: 0,
 		isAscending: true
 	};
 
+	private getTableElement(th: HTMLElement): HTMLElement | undefined {
+		return th.closest("table") || undefined;
+	}
+
+	private getTableHeads(table: HTMLElement): NodeListOf < HTMLTableCellElement > {
+		return table.querySelectorAll("th");
+	}
+
+	private getTableRows(table: HTMLElement): HTMLElement[] {
+		const rowElements = table.querySelectorAll("tr");
+		return Array.from(rowElements).splice(1, rowElements.length);
+	}
+
+	private getColumnIndex(thead: NodeListOf < HTMLElement > , th: HTMLElement): number {
+		return Array.prototype.indexOf.call(thead, th);
+	}
+
 	async onload() {
 		console.log(this.needsDarkTheme());
-		this.statusBarItem = this.addStatusBarItem();
 
-		const thead = document.querySelectorAll("th") as NodeListOf < HTMLTableCellElement > ;
-		thead.forEach((e) => {
-
-		});
+		const theads = document.querySelectorAll("th") as NodeListOf < HTMLTableCellElement > ;
+		this.updateIcons(theads, -1);
 
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
@@ -53,59 +67,39 @@ export default class TableSort extends Plugin {
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
 
+
+
 	sortTable(th: HTMLElement) {
-		const tableElement = th.closest("table");
-
-		if (tableElement == null) {
-			return undefined;
+		const tableElement = this.getTableElement(th);
+		if (!tableElement) {
+			return;
 		}
 
-		const thead = tableElement.querySelectorAll("th");
+		const theads = this.getTableHeads(tableElement);
+		const rows = this.getTableRows(tableElement);
+		const columnID = this.getColumnIndex(theads, th);
 
-		const rowElements = tableElement.querySelectorAll("tr");
-		const rows = Array.from(rowElements).splice(1, rowElements.length);
+		this.updateSortingMode(columnID);
+		this.updateIcons(theads, columnID);
 
-		// Determine the index of the column to sort by
-		const sortColumnIndex = Array.prototype.indexOf.call(thead, th);
+		const sortColumnValue = (rowA: HTMLElement, rowB: HTMLElement) => {
+			const cellA = rowA.children[columnID] as HTMLTableCellElement;
+			const cellB = rowB.children[columnID] as HTMLTableCellElement;
 
-		if (this.lastSorted.columnIndex === sortColumnIndex) {
-			this.lastSorted.isAscending = !this.lastSorted.isAscending;
-		} else if (this.lastSorted.columnIndex !== sortColumnIndex) {
-			this.lastSorted.isAscending = true;
-			this.lastSorted.columnIndex = sortColumnIndex;
-		}
-
-		this.statusBarItem.setText(th.getText());
-
-		// Sort the rows by the values in the sort column
-		const sortedRows = Array.from(rows).sort((rowA, rowB) => {
-			const cellA = rowA.children[sortColumnIndex] as HTMLTableCellElement;
-			const cellB = rowB.children[sortColumnIndex] as HTMLTableCellElement;
-
-			if (cellA == undefined || cellB == undefined) {
+			if (!cellA || !cellB) {
 				return 0;
 			}
 
-			const valueA = cellA.textContent ? .toLowerCase() ? ? false;
-			const valueB = cellB.textContent ? .toLowerCase() ? ? false;
+			const valueA = cellA.textContent ? cellA.textContent.toLowerCase() : false;
+			const valueB = cellB.textContent ? cellB.textContent.toLowerCase() : false;
 
-			if (this.lastSorted.isAscending) {
-				if (valueA < valueB) {
-					return -1;
-				} else if (valueA > valueB) {
-					return 1;
-				} else {
-					return 0;
-				}
-			} else {
-				if (valueA < valueB) {
-					return 1;
-				} else if (valueA > valueB) {
-					return -1;
-				} else {
-					return 0;
-				}
-			}
+			return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+		};
+
+		// Sort the rows by the values in the sort column
+		const sortedRows = Array.from(rows).sort((rowA, rowB) => {
+			const comparison = sortColumnValue(rowA, rowB);
+			return this.lastSorted.isAscending ? comparison : -comparison;
 		});
 
 		// Remove all the rows from the table
@@ -119,15 +113,40 @@ export default class TableSort extends Plugin {
 		});
 	}
 
+	updateIcons(theads: NodeListOf < HTMLTableCellElement > , columnID: number) {
+		theads.forEach((thead, index) => {
+			thead.classList.remove("neutral");
+			thead.classList.remove("ascending");
+			thead.classList.remove("descending");
+
+			console.log("Changing class on column " + index);
+
+			if (columnID === index) {
+				thead.classList.add(this.lastSorted.isAscending ? "ascending" : "descending");
+			} else {
+				thead.classList.add("neutral");
+			}
+		});
+	}
+
+	updateSortingMode(columnID: number) {
+		if (this.lastSorted.columnIndex === columnID) {
+			this.lastSorted.isAscending = !this.lastSorted.isAscending;
+		} else {
+			this.lastSorted.isAscending = true;
+			this.lastSorted.columnIndex = columnID;
+		}
+	}
+
 	onunload() {
 
 	}
 
 	needsDarkTheme() {
 		// color will be "rgb(#, #, #)" or "rgba(#, #, #, #)"
-		let color = window.getComputedStyle(document.body).backgroundColor;
+		const color = window.getComputedStyle(document.body).backgroundColor;
 		console.log("BG COLOR:", color);
-		
+
 		const rgb = (color || "")
 			.replace(/\s/g, "")
 			.match(/^rgba?\((\d+),(\d+),(\d+)/i);
