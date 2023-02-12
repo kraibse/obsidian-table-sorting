@@ -7,24 +7,29 @@ If your plugin does not need CSS, delete this file.
 
 */
 
-table,
-.cm-table-widget {
-	margin: 1.2rem auto;
-	padding: 1.2rem auto;
-	width: 100%;
-	box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.3);
-	border-radius: 0.4rem;
-}
-
-thead {
-	background: #1c1d1e;
-}
-
-tbody {
-	background: #23272e;
-}
-
 tbody tr:hover {
 	background-color: #444654 !important;
 	color: white;
+}
+
+table,
+.cm-table-widget {
+	border-collapse: collapse !important;
+	width: 100%;
+}
+
+th::before {
+	margin-right: 0.8rem;
+}
+
+th::before, th.neutral::before {
+	content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='gray'%3E%3Cpath d='M15 8H1l7-8zm0 1H1l7 7z' opacity='.2'/%3E%3C/svg%3E");
+}
+
+th.ascending::before {
+	content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='gray'%3E%3Cpath d='M15 8H1l7-8z' opacity='.2'/%3E%3Cpath d='M15 9H1l7 7z'/%3E%3C/svg%3E");
+}
+
+th.descending::before {
+	content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='gray'%3E%3Cpath d='M15 8H1l7-8z'/%3E%3Cpath d='M15 9H1l7 7z' opacity='.2'/%3E%3C/svg%3E");
 }
