@@ -157,7 +157,7 @@ export default class TableSort extends Plugin {
 		this.gen = this.autoIncrement();
 		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
 			if (evt.target == null) { return; }
-			const element: HTMLElement = evt.target;
+			const element: HTMLElement = evt.target as HTMLElement;
 
 			if (element.tagName !== "TH") {
 				return;
