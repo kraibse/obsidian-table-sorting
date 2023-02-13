@@ -121,7 +121,7 @@ export default class TableSort extends Plugin {
 
 	storage: any[] = [];
 
-	*auto_increment() {
+	*autoIncrement() {
 		let index = 0;
 		while (true) {
 			yield index++;
@@ -129,10 +129,7 @@ export default class TableSort extends Plugin {
 	}
 
 	configuration = {
-		defaultID: 0,		// automatically incrementing
-		lastTable: -1,
-		lastColumn: -1,
-		sortMode: "neutral"
+		defaultID: 0		// automatically incrementing
 	};
 
 	private getTableElement(th: HTMLElement): HTMLTableElement | undefined {
@@ -178,6 +175,9 @@ export default class TableSort extends Plugin {
 				table = this.storage[tableID];
 			}
 
+			const gen = this.auto_increment();
+			console.log(gen.next().value);
+			
 			const columnIndex = table.getColumnIndex(element);
 			table.setActiveColumn(columnIndex);
 			table.updateSortingMode(columnIndex);
