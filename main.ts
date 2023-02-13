@@ -2,163 +2,189 @@ import {
 	Plugin
 } from 'obsidian';
 
+
+
 export default class TableSort extends Plugin {
-	statusBarItem: HTMLElement;
-	statusBarReload: HTMLElement;
+	static Tables = class {
+		id: number;
+		column: number;
+		element: HTMLElement;
+		theads: HTMLElement[];
+		currentOrder: HTMLElement[];
+		originalOrder: HTMLElement[];
+		sorting: string;
+	
+		constructor(id: number, element: HTMLTableElement) {
+			this.id = id || 0;
+			this.column = -1;
+			this.element = element;
+			this.element.setAttribute("id", id.toString());
 
-	// const icons = {
-	// unsorted: color => `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray">
-	// 	<path d="M15 8H1l7-8zm0 1H1l7 7z" opacity=".2"/>
-	// </svg>`,
-	// 	ascending: color => `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray">
-	// 		<path d="M15 8H1l7-8z"/>
-	// 		<path d="M15 9H1l7 7z" opacity=".2"/>
-	// 	</svg>`,
-	// 	descending: color => `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray">
-	// 		<path d="M15 8H1l7-8z" opacity=".2"/>
-	// 		<path d="M15 9H1l7 7z"/>
-	// 	</svg>`
-	// };
+			this.theads = this.getTableHeads(element);
+			this.currentOrder = this.getTableRows(element);
+			this.originalOrder = this.currentOrder;
+			this.sorting = "neutral";
+		}
 
-	lastSorted = {
-		columnIndex: 0,
-		isAscending: true
-	};
+		fillTable(table: HTMLElement, rows: HTMLElement[]): void {
+			rows.forEach((row) => {
+				table.querySelector("tbody")?.appendChild(row);
+			});
+		}
 
-	private getTableElement(th: HTMLElement): HTMLElement | undefined {
+		getActiveColumn() {
+			return this.column;
+		}
+
+		getColumnIndex(th: HTMLElement) {
+			return Array.prototype?.indexOf.call(this.theads, th);
+		}
+
+		getTableHeads(table: HTMLElement): HTMLElement[] {
+			return Array.from(table.querySelectorAll("th"));
+		}
+
+		getTableRows(table: HTMLElement): HTMLElement[] {
+			const rowElements = table.querySelectorAll("tr");
+			return Array.from(rowElements).splice(1, rowElements.length);
+		}
+
+		removeRows(rows: HTMLElement[]): void {
+			Array.from(rows).forEach((row) => {
+				row.remove();
+			});
+		}
+
+		sort(table: HTMLElement, th: HTMLElement) {
+			const sortColumnValue = (rowA: HTMLElement, rowB: HTMLElement) => {
+				const cellA = rowA.children[this.column] as HTMLTableCellElement;
+				const cellB = rowB.children[this.column] as HTMLTableCellElement;
+	
+				if (!cellA || !cellB) {
+					return 0;
+				}
+	
+				const valueA = cellA.textContent ? cellA.textContent.toLowerCase() : false;
+				const valueB = cellB.textContent ? cellB.textContent.toLowerCase() : false;
+	
+				return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+			};
+			if (this.sorting == "neutral") {
+				this.currentOrder = this.originalOrder;
+			}
+			else {	
+				this.currentOrder = Array.from(this.currentOrder).sort((rowA, rowB) => {
+					const comparison = sortColumnValue(rowA, rowB);
+					return (this.sorting === "ascending") ? -comparison : comparison;
+				});
+			}
+	
+			// this.removeRows();
+			this.fillTable(table, this.currentOrder);
+		}
+
+		setActiveColumn(index: number): void {
+			if (this.column !== index) {
+				this.sorting = "neutral";
+			}
+			this.column = index;
+		}
+
+		updateIcons() {
+			
+			this.theads.forEach((thead, index) => {
+				thead.classList.remove("neutral");
+				thead.classList.remove("ascending");
+				thead.classList.remove("descending");
+	
+				if (this.column === index) {
+					thead.classList.add(this.sorting);
+				} else {
+					thead.classList.add("neutral");
+				}
+			});
+		}
+
+		updateSortingMode(columnID: number): string {
+			if (this.column !== columnID || this.sorting === "neutral") {
+				this.sorting = "descending";
+			}
+			else if (this.sorting === "ascending") {
+				this.sorting = "neutral";
+			}
+			else {
+				this.sorting = "ascending";
+			}
+			return this.sorting;
+		}
+	}
+	
+	storage: any[] = [];
+	gen;
+
+	*autoIncrement() {
+		let index = 0;
+		while (true) {
+			yield index++;
+		}
+	}
+
+	private getTableElement(th: HTMLElement): HTMLTableElement | undefined {
 		return th.closest("table") || undefined;
 	}
 
-	private getTableHeads(table: HTMLElement): NodeListOf < HTMLTableCellElement > {
-		return table.querySelectorAll("th");
+	private getTableID(table: HTMLElement): number {
+		const id = table.getAttribute("id")?.replace("table-", "");
+		return (id) ? parseInt(id) : this.gen.next().value;
 	}
 
-	private getTableRows(table: HTMLElement): HTMLElement[] {
-		const rowElements = table.querySelectorAll("tr");
-		return Array.from(rowElements).splice(1, rowElements.length);
-	}
-
-	private getColumnIndex(thead: NodeListOf < HTMLElement > , th: HTMLElement): number {
-		return Array.prototype.indexOf.call(thead, th);
+	private isNewTable(id: number): boolean {
+		//  Return true if the user has selected a new table
+		return (this.storage.length-1 >= id) ? false: true;
 	}
 
 	async onload() {
-		console.log(this.needsDarkTheme());
-
-		const theads = document.querySelectorAll("th") as NodeListOf < HTMLTableCellElement > ;
-		this.updateIcons(theads, -1);
-
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
+		this.gen = this.autoIncrement();
 		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			if (evt.target == null) {
+			if (evt.target == null) { return; }
+			const element: HTMLElement = evt.target;
+
+			if (element.tagName !== "TH") {
+				return;
+			}
+			
+			evt.preventDefault();
+			
+			const tableElement: HTMLTableElement | undefined = this.getTableElement(element);
+			if (!tableElement) {
 				return;
 			}
 
-			const element: HTMLElement = evt.target;
+			const tableID: number = this.getTableID(tableElement);
 
-			if (element.tagName === "TH") {
-				evt.preventDefault();
-				this.sortTable(element);
+			let table;
+			if (this.isNewTable(tableID)) {
+				table = new TableSort.Tables(tableID, tableElement);
+				this.storage.push(table);
 			}
+			else {
+				table = this.storage[tableID];
+			}
+
+			const columnIndex = table.getColumnIndex(element);
+			table.setActiveColumn(columnIndex);
+			table.updateSortingMode(columnIndex);
+			table.updateIcons();
+			table.sort(tableElement, element);
 		});
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-	}
-
-
-
-	sortTable(th: HTMLElement) {
-		const tableElement = this.getTableElement(th);
-		if (!tableElement) {
-			return;
-		}
-
-		const theads = this.getTableHeads(tableElement);
-		const rows = this.getTableRows(tableElement);
-		const columnID = this.getColumnIndex(theads, th);
-
-		this.updateSortingMode(columnID);
-		this.updateIcons(theads, columnID);
-
-		const sortColumnValue = (rowA: HTMLElement, rowB: HTMLElement) => {
-			const cellA = rowA.children[columnID] as HTMLTableCellElement;
-			const cellB = rowB.children[columnID] as HTMLTableCellElement;
-
-			if (!cellA || !cellB) {
-				return 0;
-			}
-
-			const valueA = cellA.textContent ? cellA.textContent.toLowerCase() : false;
-			const valueB = cellB.textContent ? cellB.textContent.toLowerCase() : false;
-
-			return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
-		};
-
-		// Sort the rows by the values in the sort column
-		const sortedRows = Array.from(rows).sort((rowA, rowB) => {
-			const comparison = sortColumnValue(rowA, rowB);
-			return this.lastSorted.isAscending ? comparison : -comparison;
-		});
-
-		// Remove all the rows from the table
-		Array.from(rows).forEach((row) => {
-			row.remove();
-		});
-
-		// Append the sorted rows to the table
-		sortedRows.forEach((row) => {
-			tableElement.querySelector("tbody").appendChild(row);
-		});
-	}
-
-	updateIcons(theads: NodeListOf < HTMLTableCellElement > , columnID: number) {
-		theads.forEach((thead, index) => {
-			thead.classList.remove("neutral");
-			thead.classList.remove("ascending");
-			thead.classList.remove("descending");
-
-			console.log("Changing class on column " + index);
-
-			if (columnID === index) {
-				thead.classList.add(this.lastSorted.isAscending ? "ascending" : "descending");
-			} else {
-				thead.classList.add("neutral");
-			}
-		});
-	}
-
-	updateSortingMode(columnID: number) {
-		if (this.lastSorted.columnIndex === columnID) {
-			this.lastSorted.isAscending = !this.lastSorted.isAscending;
-		} else {
-			this.lastSorted.isAscending = true;
-			this.lastSorted.columnIndex = columnID;
-		}
+		// this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
 
 	onunload() {
 
-	}
-
-	needsDarkTheme() {
-		// color will be "rgb(#, #, #)" or "rgba(#, #, #, #)"
-		const color = window.getComputedStyle(document.body).backgroundColor;
-		console.log("BG COLOR:", color);
-
-		const rgb = (color || "")
-			.replace(/\s/g, "")
-			.match(/^rgba?\((\d+),(\d+),(\d+)/i);
-		if (rgb) {
-			// remove "rgb.." part from match & parse
-			const colors = rgb.slice(1).map(Number);
-			// http://stackoverflow.com/a/15794784/145346
-			const brightest = Math.max(...colors);
-			// return true if we have a dark background
-			return brightest < 128;
-		}
-		// fallback to bright background
-		return false;
 	}
 }
