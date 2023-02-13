@@ -138,6 +138,14 @@ export default class TableSort extends Plugin {
 		return (id) ? parseInt(id) : this.gen.next().value;
 	}
 
+	private hasCustomClasses(table: HTMLElement): boolean {
+		const classes = table.getAttribute("class") || "";
+		if (classes.length > 0) {
+			return true;
+		}
+		return false;
+	}
+
 	private isNewTable(id: number): boolean {
 		//  Return true if the user has selected a new table
 		return (this.storage.length-1 >= id) ? false: true;
@@ -158,7 +166,7 @@ export default class TableSort extends Plugin {
 			evt.preventDefault();
 			
 			const tableElement: HTMLTableElement | undefined = this.getTableElement(element);
-			if (!tableElement) {
+			if (!tableElement || this.hasCustomClasses(tableElement)) {
 				return;
 			}
 
