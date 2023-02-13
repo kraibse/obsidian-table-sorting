@@ -118,8 +118,9 @@ export default class TableSort extends Plugin {
 			return this.sorting;
 		}
 	}
-
+	
 	storage: any[] = [];
+	gen;
 
 	*autoIncrement() {
 		let index = 0;
@@ -128,17 +129,13 @@ export default class TableSort extends Plugin {
 		}
 	}
 
-	configuration = {
-		defaultID: 0		// automatically incrementing
-	};
-
 	private getTableElement(th: HTMLElement): HTMLTableElement | undefined {
 		return th.closest("table") || undefined;
 	}
 
 	private getTableID(table: HTMLElement): number {
 		const id = table.getAttribute("id")?.replace("table-", "");
-		return (id) ? parseInt(id) : this.configuration.defaultID++;
+		return (id) ? parseInt(id) : this.gen.next().value;
 	}
 
 	private isNewTable(id: number): boolean {
@@ -149,6 +146,7 @@ export default class TableSort extends Plugin {
 	async onload() {
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
+		this.gen = this.autoIncrement();
 		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
 			if (evt.target == null) { return; }
 			const element: HTMLElement = evt.target;
@@ -175,9 +173,6 @@ export default class TableSort extends Plugin {
 				table = this.storage[tableID];
 			}
 
-			const gen = this.auto_increment();
-			console.log(gen.next().value);
-			
 			const columnIndex = table.getColumnIndex(element);
 			table.setActiveColumn(columnIndex);
 			table.updateSortingMode(columnIndex);
