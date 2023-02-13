@@ -69,7 +69,6 @@ export default class TableSort extends Plugin {
 	
 				return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
 			};
-			let newOrder: HTMLElement[];
 			if (this.sorting == "neutral") {
 				this.currentOrder = this.originalOrder;
 			}
