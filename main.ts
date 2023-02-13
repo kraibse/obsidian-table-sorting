@@ -2,21 +2,23 @@ import {
 	Plugin
 } from 'obsidian';
 
-
+import { Generator } from '@types/core-js';
 
 export default class TableSort extends Plugin {
 	static Tables = class {
 		id: number;
 		column: number;
+		clickedElements: number[];
 		element: HTMLElement;
 		theads: HTMLElement[];
 		currentOrder: HTMLElement[];
 		originalOrder: HTMLElement[];
 		sorting: string;
-	
+
 		constructor(id: number, element: HTMLTableElement) {
 			this.id = id || 0;
 			this.column = -1;
+			this.clickedElements = [];
 			this.element = element;
 			this.element.setAttribute("id", id.toString());
 
@@ -24,6 +26,11 @@ export default class TableSort extends Plugin {
 			this.currentOrder = this.getTableRows(element);
 			this.originalOrder = this.currentOrder;
 			this.sorting = "neutral";
+		}
+
+		addClickedElement(column: number): void {
+			this.clickedElements = this.clickedElements.includes(this.column)
+			? this.clickedElements : [...this.clickedElements, column];
 		}
 
 		fillTable(table: HTMLElement, rows: HTMLElement[]): void {
@@ -55,32 +62,43 @@ export default class TableSort extends Plugin {
 			});
 		}
 
-		sort(table: HTMLElement, th: HTMLElement) {
+		sort(): void {
+			console.log(this.clickedElements);
+			
 			const sortColumnValue = (rowA: HTMLElement, rowB: HTMLElement) => {
-				const cellA = rowA.children[this.column] as HTMLTableCellElement;
-				const cellB = rowB.children[this.column] as HTMLTableCellElement;
-	
-				if (!cellA || !cellB) {
-					return 0;
+				for (const columnIndex of this.clickedElements) {
+					
+					const cellA = rowA.children[columnIndex] as HTMLTableCellElement;
+					const cellB = rowB.children[columnIndex] as HTMLTableCellElement;
+					
+					if (!cellA || !cellB) {
+						return 0;
+					}
+					
+					const valueA = cellA.textContent ? cellA.textContent.toLowerCase() : false;
+					const valueB = cellB.textContent ? cellB.textContent.toLowerCase() : false;
+					
+					if (valueA < valueB) {
+						return -1;
+					}
+					if (valueA > valueB) {
+						return 1;
+					}
 				}
-	
-				const valueA = cellA.textContent ? cellA.textContent.toLowerCase() : false;
-				const valueB = cellB.textContent ? cellB.textContent.toLowerCase() : false;
-	
-				return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+				return 0;
 			};
 			if (this.sorting == "neutral") {
 				this.currentOrder = this.originalOrder;
-			}
-			else {	
+			} else {
+				// TODO: Enable sorting by column
 				this.currentOrder = Array.from(this.currentOrder).sort((rowA, rowB) => {
 					const comparison = sortColumnValue(rowA, rowB);
 					return (this.sorting === "ascending") ? -comparison : comparison;
 				});
 			}
-	
+
 			// this.removeRows();
-			this.fillTable(table, this.currentOrder);
+			this.fillTable(this.element, this.currentOrder);
 		}
 
 		setActiveColumn(index: number): void {
@@ -90,13 +108,17 @@ export default class TableSort extends Plugin {
 			this.column = index;
 		}
 
+		setClickedElement(column: number): void {
+			this.clickedElements = [column];
+		}
+
 		updateIcons() {
-			
+
 			this.theads.forEach((thead, index) => {
 				thead.classList.remove("neutral");
 				thead.classList.remove("ascending");
 				thead.classList.remove("descending");
-	
+
 				if (this.column === index) {
 					thead.classList.add(this.sorting);
 				} else {
@@ -108,21 +130,19 @@ export default class TableSort extends Plugin {
 		updateSortingMode(columnID: number): string {
 			if (this.column !== columnID || this.sorting === "neutral") {
 				this.sorting = "descending";
-			}
-			else if (this.sorting === "ascending") {
+			} else if (this.sorting === "ascending") {
 				this.sorting = "neutral";
-			}
-			else {
+			} else {
 				this.sorting = "ascending";
 			}
 			return this.sorting;
 		}
 	}
-	
-	storage: any[] = [];
-	gen;
 
-	*autoIncrement() {
+	storage: TableSort.Tables[] = [];
+	gen: Generator;
+
+	* autoIncrement() {
 		let index = 0;
 		while (true) {
 			yield index++;
@@ -148,7 +168,7 @@ export default class TableSort extends Plugin {
 
 	private isNewTable(id: number): boolean {
 		//  Return true if the user has selected a new table
-		return (this.storage.length-1 >= id) ? false: true;
+		return (this.storage.length - 1 >= id) ? false : true;
 	}
 
 	async onload() {
@@ -156,15 +176,17 @@ export default class TableSort extends Plugin {
 		// Using this function will automatically remove the event listener when this plugin is disabled.
 		this.gen = this.autoIncrement();
 		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			if (evt.target == null) { return; }
+			if (evt.target == null) {
+				return;
+			}
 			const element: HTMLElement = evt.target as HTMLElement;
 
 			if (element.tagName !== "TH") {
 				return;
 			}
-			
+
 			evt.preventDefault();
-			
+
 			const tableElement: HTMLTableElement | undefined = this.getTableElement(element);
 			if (!tableElement || this.hasCustomClasses(tableElement)) {
 				return;
@@ -176,16 +198,23 @@ export default class TableSort extends Plugin {
 			if (this.isNewTable(tableID)) {
 				table = new TableSort.Tables(tableID, tableElement);
 				this.storage.push(table);
-			}
-			else {
+			} else {
 				table = this.storage[tableID];
 			}
 
 			const columnIndex = table.getColumnIndex(element);
+
+			// TODO: fix the column index for the sorting
+			if (evt.button === 2 || evt.ctrlKey) {
+				table.addClickedElement(columnIndex);
+			}
+			else {
+				table.setClickedElement(columnIndex);
+			}
 			table.setActiveColumn(columnIndex);
 			table.updateSortingMode(columnIndex);
 			table.updateIcons();
-			table.sort(tableElement, element);
+			table.sort();
 		});
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
