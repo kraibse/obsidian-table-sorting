@@ -10,10 +10,10 @@ A plugin for the [Obsidian](https://obsidian.md) note-taking app that allows you
 - Support for sorting tables with text or numeric data
 
 ## Usage
-1.  Install the plugin by following the [Obsidian plugin installation instructions](https://help.obsidian.md/Extending+Obsidian/Community+plugins).
+1.  Install the plugin by following the [Manual installation instructions](https://github.com/obsidianmd/obsidian-sample-plugin#manually-installing-the-plugin) and the [Obsidian plugin installation instructions](https://help.obsidian.md/Extending+Obsidian/Community+plugins).
 2.  Create a table in your Obsidian note.
 3.  Click on a `thead` element to sort the rows of the table by that column.
-4.  Click on the same `thead` element again to toggle between ascending and descending order.
+4.  Click on the same `thead` element again to toggle between ascending, descending and neutral order.
 
 ## Limitations
 
