@@ -8,6 +8,7 @@ export default class TableSort extends Plugin {
 	static Tables = class {
 		id: number;
 		column: number;
+		element: HTMLElement;
 		theads: HTMLElement[];
 		currentOrder: HTMLElement[];
 		originalOrder: HTMLElement[];
@@ -16,6 +17,9 @@ export default class TableSort extends Plugin {
 		constructor(id: number, element: HTMLTableElement) {
 			this.id = id || 0;
 			this.column = -1;
+			this.element = element;
+			this.element.setAttribute("id", id.toString());
+
 			this.theads = this.getTableHeads(element);
 			this.currentOrder = this.getTableRows(element);
 			this.originalOrder = this.currentOrder;
@@ -32,6 +36,10 @@ export default class TableSort extends Plugin {
 			return this.column;
 		}
 
+		getColumnIndex(th: HTMLElement) {
+			return Array.prototype?.indexOf.call(this.theads, th);
+		}
+
 		getTableHeads(table: HTMLElement): HTMLElement[] {
 			return Array.from(table.querySelectorAll("th"));
 		}
@@ -45,11 +53,6 @@ export default class TableSort extends Plugin {
 			Array.from(rows).forEach((row) => {
 				row.remove();
 			});
-		}
-		
-		setActiveColumn(element: HTMLElement): void {
-			const index = Array.prototype.indexOf.call(this.theads, element);
-			return index;
 		}
 
 		sort(table: HTMLElement, th: HTMLElement) {
@@ -66,6 +69,7 @@ export default class TableSort extends Plugin {
 	
 				return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
 			};
+			let newOrder: HTMLElement[];
 			if (this.sorting == "neutral") {
 				this.currentOrder = this.originalOrder;
 			}
@@ -80,11 +84,15 @@ export default class TableSort extends Plugin {
 			this.fillTable(table, this.currentOrder);
 		}
 
-		updateActiveColumn(index: number): number {
-			return (this.column === index && this.sorting === "ascending") ? -1 : this.column;
+		setActiveColumn(index: number): void {
+			if (this.column !== index) {
+				this.sorting = "neutral";
+			}
+			this.column = index;
 		}
 
 		updateIcons() {
+			
 			this.theads.forEach((thead, index) => {
 				thead.classList.remove("neutral");
 				thead.classList.remove("ascending");
@@ -98,7 +106,7 @@ export default class TableSort extends Plugin {
 			});
 		}
 
-		updateSortingMode(columnID: number) {
+		updateSortingMode(columnID: number): string {
 			if (this.column !== columnID || this.sorting === "neutral") {
 				this.sorting = "descending";
 			}
@@ -108,11 +116,18 @@ export default class TableSort extends Plugin {
 			else {
 				this.sorting = "ascending";
 			}
-			console.log("Switching to sort mode -> " + this.sorting);
+			return this.sorting;
 		}
 	}
 
 	storage: any[] = [];
+
+	*auto_increment() {
+		let index = 0;
+		while (true) {
+			yield index++;
+		}
+	}
 
 	configuration = {
 		defaultID: 0,		// automatically incrementing
@@ -120,10 +135,6 @@ export default class TableSort extends Plugin {
 		lastColumn: -1,
 		sortMode: "neutral"
 	};
-
-	originalOrder: { [key: string]: HTMLElement[] } = { };
-	sortModes: { [key: string]: string } = { };
-
 
 	private getTableElement(th: HTMLElement): HTMLTableElement | undefined {
 		return th.closest("table") || undefined;
@@ -134,102 +145,52 @@ export default class TableSort extends Plugin {
 		return (id) ? parseInt(id) : this.configuration.defaultID++;
 	}
 
-	// private getColumnIndex(thead: NodeListOf < HTMLElement > , th: HTMLElement): number {
-	// 	const columnID = Array.prototype.indexOf.call(thead, th);
-	// 	const lastColumn = this.configuration.lastColumn;
-	// 	if (lastColumn == columnID && this.sortModes[columnID] == "ascending") {	// reset to neutral
-	// 		return -1;
-	// 	}
-	// 	return columnID;
-	// }
-
 	private isNewTable(id: number): boolean {
 		//  Return true if the user has selected a new table
-		return (this.storage.length >= id) ? false: true;
+		return (this.storage.length-1 >= id) ? false: true;
 	}
-
-	// private loadConfig(id: string) {		
-	// 	if (this.configuration.lastTable === id && this.configuration.lastColumn != -1) {
-	// 		this.sortModes[id] = "descending";
-	// 	}
-	// 	this.configuration.lastTable = id;
-	// 	this.configuration.lastColumn = -1;
-	// 	this.sortModes.columnID = this.sortModes[id];
-	// }
 
 	async onload() {
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
-		
-		this.originalOrder = {};
 		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
 			if (evt.target == null) { return; }
 			const element: HTMLElement = evt.target;
 
-			if (element.tagName === "TH") {
-				evt.preventDefault();
-				
-				const tableElement: HTMLTableElement | undefined = this.getTableElement(element);
-				if (!tableElement) {
-					return;
-				}
-
-				const tableID: number = this.getTableID(tableElement);
-
-				let table;
-				if (this.isNewTable(tableID)) {
-					table = new TableSort.Tables(tableID, tableElement);
-					this.storage.push(table);
-				}
-				else {
-					table = this.storage[tableID];
-				}
-
-				const columnID: number = table.updateActiveColumn(table.setActiveColumn(element));
-
-				table.updateSortingMode(columnID);
-				table.updateIcons();
-				table.sort(tableElement, element);
+			if (element.tagName !== "TH") {
+				return;
 			}
+			
+			evt.preventDefault();
+			
+			const tableElement: HTMLTableElement | undefined = this.getTableElement(element);
+			if (!tableElement) {
+				return;
+			}
+
+			const tableID: number = this.getTableID(tableElement);
+
+			let table;
+			if (this.isNewTable(tableID)) {
+				table = new TableSort.Tables(tableID, tableElement);
+				this.storage.push(table);
+			}
+			else {
+				table = this.storage[tableID];
+			}
+
+			const columnIndex = table.getColumnIndex(element);
+			table.setActiveColumn(columnIndex);
+			table.updateSortingMode(columnIndex);
+			table.updateIcons();
+			table.sort(tableElement, element);
 		});
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		// this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
-
-	// saveConfig(table: HTMLElement) {
-	// 	const tableID = table.getAttribute("id")?.replace("table-", "") || -1;
-	// 	if (!tableID || tableID in this.originalOrder) {
-	// 		return;
-	// 	}
-	// 	const tr: HTMLElement[] = this.getTableRows(table);
-	// 	// const id: string = (this.configuration.defaultID++).toString();
-	// 	table.setAttribute("id", "table-" + id);
-	// 	this.originalOrder[id] = tr;
-	// 	this.sortModes[id] = "descending";
-	// }
 
 	onunload() {
 
-	}
-
-	needsDarkTheme() {
-		// color will be "rgb(#, #, #)" or "rgba(#, #, #, #)"
-		const color = window.getComputedStyle(document.body).backgroundColor;
-		console.log("BG COLOR:", color);
-
-		const rgb = (color || "")
-			.replace(/\s/g, "")
-			.match(/^rgba?\((\d+),(\d+),(\d+)/i);
-		if (rgb) {
-			// remove "rgb.." part from match & parse
-			const colors = rgb.slice(1).map(Number);
-			// http://stackoverflow.com/a/15794784/145346
-			const brightest = Math.max(...colors);
-			// return true if we have a dark background
-			return brightest < 128;
-		}
-		// fallback to bright background
-		return false;
 	}
 }
