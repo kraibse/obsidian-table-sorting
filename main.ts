@@ -205,7 +205,7 @@ export default class TableSort extends Plugin {
 			const columnIndex = table.getColumnIndex(element);
 
 			// TODO: fix the column index for the sorting
-			if (evt.button === 2 || evt.ctrlKey) {
+			if (evt.ctrlKey) {
 				table.addClickedElement(columnIndex);
 			}
 			else {
