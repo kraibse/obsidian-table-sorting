@@ -69,7 +69,7 @@ export default class TableSort extends Plugin {
 			}
 
 			const columnIndex = table.getColumnIndex(element);
-
+			
 			// TODO: fix the column index for the sorting
 			if (evt.ctrlKey) {
 				table.addClickedElement(columnIndex);
@@ -77,9 +77,10 @@ export default class TableSort extends Plugin {
 			else {
 				table.setClickedElement(columnIndex);
 			}
+			
+			const column = table.getColumnDataAt(columnIndex);
 			table.setActiveColumn(columnIndex);
-			table.updateSortingMode(columnIndex);
-			table.updateIcons();
+			column.update();
 			table.sort();
 		}, { capture: true });
 

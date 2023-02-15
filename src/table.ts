@@ -5,7 +5,6 @@ export class Table {
 	column: number;
 	clickedElements: number[];
 	element: HTMLElement;
-	theads: HTMLElement[];
 	currentOrder: HTMLElement[];
 	originalOrder: HTMLElement[];
 	sorting: string;
@@ -18,16 +17,16 @@ export class Table {
 		this.clickedElements = [];
 		this.element = element;
 		this.element.setAttribute("id", id.toString());
-
-		this.theads = this.getTableHeads(element);
 		this.currentOrder = this.getTableRows(element);
 		this.originalOrder = this.currentOrder;
 		this.sorting = "neutral";
 	}
 
-	addClickedElement(column: number): void {
-		this.clickedElements = this.clickedElements.includes(this.column)
-		? this.clickedElements : [...this.clickedElements, column];
+	addClickedElement(columnIndex: number): void {
+        if (this.clickedElements.includes(columnIndex)) {
+            return;
+        }
+        this.clickedElements = [...this.clickedElements, columnIndex];
 	}
 
 	fillTable(table: HTMLElement, rows: HTMLElement[]): void {
@@ -36,16 +35,16 @@ export class Table {
 		});
 	}
 
-	getActiveColumn() {
-		return this.column;
-	}
+    getColumnDataAt(id: number): Column {
+        return this.columns[id];
+    }
 
 	getColumnIndex(th: HTMLElement) {
-		return Array.prototype?.indexOf.call(this.theads, th);
+		return Array.prototype?.indexOf.call(this.getTableHeads(), th);
 	}
 
-	getTableHeads(table: HTMLElement): HTMLElement[] {
-		return Array.from(table.querySelectorAll("th"));
+	getTableHeads(): HTMLElement[] {
+		return Array.from(this.element.querySelectorAll("th"));
 	}
 
 	getTableRows(table: HTMLElement): HTMLElement[] {
@@ -98,40 +97,46 @@ export class Table {
 		this.fillTable(this.element, this.currentOrder);
 	}
 
-	setActiveColumn(index: number): void {
-		if (this.column !== index) {
-			this.sorting = "neutral";
-		}
-		this.column = index;
+	setActiveColumn(clickedColumn=this.clickedElements.length-1): void {
+        /*   Activates the clicked column and sets the sorting mode accordingly.   */
+        const column = this.getColumnDataAt(clickedColumn);
+		if (this.clickedElements.length > 1) {
+            // 
+        }
+        else if (this.column !== clickedColumn) {
+            this.sorting = "neutral";
+        }
+		this.column = clickedColumn;
+        column.update();
 	}
 
 	setClickedElement(column: number): void {
 		this.clickedElements = [column];
 	}
 
-	updateIcons() {
+	// updateIcons() {
+    //     // Sets CSS classes or each of the TH elements
+	// 	this.getTableHeads().forEach((thead, index) => {
+	// 		thead.classList.remove("neutral");
+	// 		thead.classList.remove("ascending");
+	// 		thead.classList.remove("descending");
 
-		this.theads.forEach((thead, index) => {
-			thead.classList.remove("neutral");
-			thead.classList.remove("ascending");
-			thead.classList.remove("descending");
+	// 		if (this.column === index) {
+	// 			thead.classList.add(this.sorting);
+	// 		} else {
+	// 			thead.classList.add("neutral");
+	// 		}
+	// 	});
+	// }
 
-			if (this.column === index) {
-				thead.classList.add(this.sorting);
-			} else {
-				thead.classList.add("neutral");
-			}
-		});
-	}
-
-	updateSortingMode(columnID: number): string {
-		if (this.column !== columnID || this.sorting === "neutral") {
-			this.sorting = "descending";
-		} else if (this.sorting === "ascending") {
-			this.sorting = "neutral";
-		} else {
-			this.sorting = "ascending";
-		}
-		return this.sorting;
-	}
+	// updateSortingMode(columnID: number): string {
+	// 	if (this.column !== columnID || this.sorting === "neutral") {
+	// 		this.sorting = "descending";
+	// 	} else if (this.sorting === "ascending") {
+	// 		this.sorting = "neutral";
+	// 	} else {
+	// 		this.sorting = "ascending";
+	// 	}
+	// 	return this.sorting;
+	// }
 }
