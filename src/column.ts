@@ -3,10 +3,17 @@ export class Column {
 	order: string;
 	element: HTMLElement;
 
-	constructor(id: number, element: HTMLElement, order: string) {
+	constructor(id: number, element: HTMLElement, order="neutral") {
 		this.id = id;
 		this.element = element;
 		this.order = order;
+	}
+
+	getWeight(): number {
+		if (this.order == "neutral") {
+			return 0;
+		}
+		return (this.order == "ascending")? 1: -1; 
 	}
 
 	reset() {
@@ -21,12 +28,13 @@ export class Column {
         this.element.classList.add(this.order);
     }
 
-	update() {
+	update(): string {
 		/* Updates the order mode and updates column CSS class */
         this.order = (this.order === "neutral") ? "descending"
                     : (this.order === "ascending") ? "neutral"
                     : "ascending";
 
 		this.setIcon();
+		return this.order;
 	}
 }
