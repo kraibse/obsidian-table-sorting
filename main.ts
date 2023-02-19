@@ -2,6 +2,7 @@ import { Plugin } from 'obsidian';
 import { Generator } from '@types/core-js';
 
 import { Table } from "./src/table";
+import { Column } from "./src/column";
 
 export default class TableSort extends Plugin {
 
@@ -51,7 +52,7 @@ export default class TableSort extends Plugin {
 				return;
 			}
 
-			evt.preventDefault();
+			// evt.preventDefault();
 
 			const tableElement: HTMLTableElement | undefined = this.getTableElement(element);
 			if (!tableElement || this.hasCustomClasses(tableElement)) {
@@ -69,18 +70,10 @@ export default class TableSort extends Plugin {
 			}
 
 			const columnIndex = table.getColumnIndex(element);
-			
-			// TODO: fix the column index for the sorting
-			if (evt.ctrlKey) {
-				table.addClickedElement(columnIndex);
-			}
-			else {
-				table.setClickedElement(columnIndex);
-			}
-			
-			const column = table.getColumnDataAt(columnIndex);
-			table.setActiveColumn(columnIndex);
+			const column: Column = table.getColumnDataAt(columnIndex);
+
 			column.update();
+			table.updateSortingOrder(column, evt.ctrlKey == true);
 			table.sort();
 		}, { capture: true });
 
