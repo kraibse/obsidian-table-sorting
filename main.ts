@@ -52,7 +52,7 @@ export default class TableSort extends Plugin {
 				return;
 			}
 
-			// evt.preventDefault();
+			evt.preventDefault();
 
 			const tableElement: HTMLTableElement | undefined = this.getTableElement(element);
 			if (!tableElement || this.hasCustomClasses(tableElement)) {
