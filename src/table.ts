@@ -22,13 +22,6 @@ export class Table {
 		this.originalOrder = this.currentOrder;
 	}
 
-	// addClickedElement(columnIndex: number): void {
-	// 	if (this.filters.includes(columnIndex)) {
-	// 		return;
-	// 	}
-	// 	this.filters = [...this.filters, columnIndex];
-	// }
-
 	updateSortingOrder(column: Column, isPressingCtrl: boolean): void {
 		// sets the order for the column selection
 		const isNewFilter = !this.filters.includes(column);
@@ -77,7 +70,7 @@ export class Table {
 
 	getColumnIndex(th: HTMLElement) {
 		this.updateElement();
-		return Array.prototype?.indexOf.call(this.getTableHeads(), th);
+		return Array.prototype.indexOf.call(this.getTableHeads(), th);
 	}
 
 	getTableHeads(): HTMLElement[] {
@@ -136,52 +129,10 @@ export class Table {
 		this.fillTable(this.element, this.currentOrder);
 	}
 
-	// setActiveColumn(clickedColumn = this.filters.length - 1): void {
-	// 	/*   Activates the clicked column and sets the sorting mode accordingly.   */
-	// 	const column = this.getColumnDataAt(clickedColumn);
-	// 	if (this.filters.length > 1) {
-	// 		// 
-	// 	} else if (this.column !== clickedColumn) {
-	// 		this.sorting = "neutral";
-	// 	}
-	// 	this.column = clickedColumn;
-	// 	// column.update();
-	// }
-
-	// setClickedElement(column: number): void {
-	// 	this.filters = [column];
-	// }
-
 	updateElement() {
 		const element = document.getElementById(this.id.toString()) as HTMLElement;
 		if (!element) {
 			console.error("Found no registered table with the corresponding id.");
 		}
 	}
-
-	// updateIcons() {
-	//     // Sets CSS classes or each of the TH elements
-	// 	this.getTableHeads().forEach((thead, index) => {
-	// 		thead.classList.remove("neutral");
-	// 		thead.classList.remove("ascending");
-	// 		thead.classList.remove("descending");
-
-	// 		if (this.column === index) {
-	// 			thead.classList.add(this.sorting);
-	// 		} else {
-	// 			thead.classList.add("neutral");
-	// 		}
-	// 	});
-	// }
-
-	// updateSortingMode(columnID: number): string {
-	// 	if (this.column !== columnID || this.sorting === "neutral") {
-	// 		this.sorting = "descending";
-	// 	} else if (this.sorting === "ascending") {
-	// 		this.sorting = "neutral";
-	// 	} else {
-	// 		this.sorting = "ascending";
-	// 	}
-	// 	return this.sorting;
-	// }
 }
