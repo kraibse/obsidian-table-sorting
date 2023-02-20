@@ -2,6 +2,7 @@ export class Column {
 	id: number;
 	order: string;
 	element: HTMLElement;
+	queueID: number;
 
 	constructor(id: number, element: HTMLElement, order="neutral") {
 		this.id = id;
@@ -27,6 +28,13 @@ export class Column {
 
         this.element.classList.add(this.order);
     }
+
+	setLabel (id=-1) {
+		const label = (id >= 0) ? "(" + id + ")" : " ";
+		console.log("Setting label to " + label);
+		
+		this.element.setAttribute('data-content', label);
+	}
 
 	update(): string {
 		/* Updates the order mode and updates column CSS class */
