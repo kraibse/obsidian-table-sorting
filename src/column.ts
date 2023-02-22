@@ -2,7 +2,6 @@ export class Column {
 	id: number;
 	order: string;
 	element: HTMLElement;
-	queueID: number;
 
 	constructor(id: number, element: HTMLElement, order="neutral") {
 		this.id = id;
