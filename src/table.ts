@@ -25,42 +25,55 @@ export class Table {
 	updateSortingOrder(column: Column, isPressingCtrl: boolean): void {
 		// sets the order for the column selection
 		if (!isPressingCtrl) {
+			this.filters = [column];
 			this.columns.forEach((e) => {
 				if (e !== column) {
 					e.order = "neutral";
+					e.setLabel("");
+				}
+				else {
+					// e.order = (e.order != "") ? "descending": "neutral";
 				}
 			});
 		}
+		else {
+			column.update();	
+		}
 
-		const isNewFilter = !this.filters.includes(column);
-		// if (isPressingCtrl && !isNewFilter) {
-		// 	// 
+		const isRegistered = this.filters.includes(column);
+		const theLastColumn: number = this.filters.indexOf(column);
+		
+		// if (isPressingCtrl && isRegistered) {
 		// }
 		
-		if (isPressingCtrl && isNewFilter) { 
+		if (isPressingCtrl && !isRegistered && column.order == "neutral") {
+			column.update();
 			this.filters.push(column);
-			column.setLabel(this.filters.length-1);
 		}
-
-		if (!isPressingCtrl && isNewFilter) {
+		else if (!isPressingCtrl && !isRegistered) {
 			column.order = "descending";
 			this.filters = [column];
-			column.setLabel(0);
 		}
 
-		if (column.order == "neutral") {	// reset to neutral
-			this.filters.splice(column.id, 1);
-			column.setLabel();
+		if (column.order == "neutral") {	// TODO: WTF IS THIS WRONG ID
+			this.filters.splice(theLastColumn, 1);
+			column.setLabel("");
 		}
 
 		this.columns.forEach((e) => {
+			e.setIcon();
+			if (e.order == "neutral") {
+				this.filters.splice(theLastColumn, 1);
+
+			}
+
 			if (e.order != "neutral") { return; }
 			e.order = "neutral";
-			e.setIcon();
-			e.setLabel();
+			e.setLabel("");
 		});
 		this.filters.forEach((e, i) => {
-			e.setLabel(i);
+			e.setLabel("(" + i.toString() + ")");
+			e.setIcon();
 		});
 	}
 
@@ -75,7 +88,6 @@ export class Table {
 		// 	return new Column(id, element, "neutral");
 		// }
 		const element: HTMLElement = this.getTableHeads()[id];
-		console.log(id, element, this.getTableHeads());
 		if (!this.columns[id]) {
 			const column = new Column(id, element, "neutral");
 			this.columns[id] = column;
