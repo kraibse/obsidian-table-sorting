@@ -56,5 +56,6 @@ table:not([class]) th,
 table:not([class]) th.neutral::after,
 table:not([class]) th.descending::after,
 table:not([class]) th.ascending::after {
+	margin-left: 0.8rem;
 	content: attr(data-content)
 }
