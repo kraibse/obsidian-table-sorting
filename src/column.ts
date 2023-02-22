@@ -9,6 +9,10 @@ export class Column {
 		this.order = order;
 	}
 
+	getName(): string {
+		return this.element.innerHTML;
+	}
+
 	getWeight(): number {
 		if (this.order == "neutral") {
 			return 0;
@@ -28,9 +32,8 @@ export class Column {
         this.element.classList.add(this.order);
     }
 
-	setLabel (id=-1) {
-		const label = (id >= 0) ? "(" + id + ")" : " ";
-		console.log("Setting label to " + label);
+	setLabel (label: string) {
+		console.log("Setting '" + this.getName() + "' to " + label);
 		
 		this.element.setAttribute('data-content', label);
 	}
