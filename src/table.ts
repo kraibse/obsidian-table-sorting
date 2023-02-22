@@ -24,44 +24,43 @@ export class Table {
 
 	updateSortingOrder(column: Column, isPressingCtrl: boolean): void {
 		// sets the order for the column selection
+		if (!isPressingCtrl) {
+			this.columns.forEach((e) => {
+				if (e !== column) {
+					e.order = "neutral";
+				}
+			});
+		}
+
 		const isNewFilter = !this.filters.includes(column);
-		const sortBySingleColumn = () => {
-			if (isPressingCtrl) {
-				return;
-			}
-			if (isNewFilter) {	// activated single column mode
-				column.order = "descending";
-				this.filters = [column];
-				column.setLabel(0);
-			}
-		}
-		const clickedNewColumn = () => {
-			if (!isNewFilter) {
-				return;
-			}
-			if (isPressingCtrl) {	// add it to the filters list
-				this.filters.push(column);
-				column.setLabel(this.filters.length-1);
-			}
-		}
+		// if (isPressingCtrl && !isNewFilter) {
+		// 	// 
+		// }
 		
-		sortBySingleColumn();
-		clickedNewColumn();
-		
+		if (isPressingCtrl && isNewFilter) { 
+			this.filters.push(column);
+			column.setLabel(this.filters.length-1);
+		}
+
+		if (!isPressingCtrl && isNewFilter) {
+			column.order = "descending";
+			this.filters = [column];
+			column.setLabel(0);
+		}
+
 		if (column.order == "neutral") {	// reset to neutral
 			this.filters.splice(column.id, 1);
 			column.setLabel();
 		}
 
 		this.columns.forEach((e) => {
-			if (!isPressingCtrl && e !== column || e.order == "neutral") {
-				e.order = "neutral";
-				e.setIcon();
-				e.setLabel();
-			}
+			if (e.order != "neutral") { return; }
+			e.order = "neutral";
+			e.setIcon();
+			e.setLabel();
 		});
-		this.filters.forEach((f, i) => {
-			f.setLabel(i);
+		this.filters.forEach((e, i) => {
+			e.setLabel(i);
 		});
 	}
 
