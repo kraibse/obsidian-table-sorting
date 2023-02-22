@@ -42,6 +42,8 @@ export default class TableSort extends Plugin {
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
 		this.gen = this.autoIncrement();
+		this.storage = [];
+		
 		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
 			if (evt.target == null) {
 				return;
@@ -72,7 +74,6 @@ export default class TableSort extends Plugin {
 			const columnIndex = table.getColumnIndex(element);
 			const column: Column = table.getColumnDataAt(columnIndex);
 
-			column.update();
 			table.updateSortingOrder(column, evt.ctrlKey == true);
 			table.sort();
 		}, { capture: true });
