@@ -22,29 +22,43 @@ export class Table {
 		this.originalOrder = this.currentOrder;
 	}
 
+	_resetOtherColumns(column: Column): void {
+		this.columns.forEach((e) => {
+			if (e !== column) {
+				e.order = "neutral";
+				e.setLabel("");
+			}
+			else {
+				column.update();
+			}
+			e.setIcon();
+		});
+	}
+
+	_revertColumn(column: Column): void {
+		this.filters.splice(this.filters.indexOf(column), 1);
+		column.setLabel("");	
+	}
+
+	_updateLabels(): void {
+		this.filters.forEach((e, i) => {
+			e.setLabel("(" + i.toString() + ")");
+			e.setIcon();
+		});
+	}
+
 	handleClick(column: Column, isPressingCtrl: boolean): void {
 		// sets the order for the column selection
+		const isRegistered = this.filters.includes(column);
 		
 		if (!isPressingCtrl) {
-			const isRegistered = this.filters.includes(column);
 			if (!isRegistered) {
 				column.order = "neutral";
 			}
 			this.filters = [column];
-			this.columns.forEach((e) => {
-				if (e !== column) {
-					e.order = "neutral";
-					e.setLabel("");
-				}
-				else {
-					column.update();
-				}
-				e.setIcon();
-			});
+			this._resetOtherColumns(column);
 		}
-		else {
-			const isRegistered = this.filters.includes(column);
-			
+		else {			
 			if (!isRegistered) {
 				column.order = "neutral";
 				this.filters.push(column);
@@ -53,14 +67,10 @@ export class Table {
 		}
 
 		if (column.order == "neutral") {
-			this.filters.splice(this.filters.indexOf(column), 1);
-			column.setLabel("");
+			this._revertColumn(column);
 		}
 
-		this.filters.forEach((e, i) => {
-			e.setLabel("(" + i.toString() + ")");
-			e.setIcon();
-		});
+		this._updateLabels();
 	}
 
 	fillTable(table: HTMLElement, rows: HTMLElement[]): void {
