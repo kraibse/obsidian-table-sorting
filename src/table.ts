@@ -22,9 +22,14 @@ export class Table {
 		this.originalOrder = this.currentOrder;
 	}
 
-	updateSortingOrder(column: Column, isPressingCtrl: boolean): void {
+	handleClick(column: Column, isPressingCtrl: boolean): void {
 		// sets the order for the column selection
+		
 		if (!isPressingCtrl) {
+			const isRegistered = this.filters.includes(column);
+			if (!isRegistered) {
+				column.order = "neutral";
+			}
 			this.filters = [column];
 			this.columns.forEach((e) => {
 				if (e !== column) {
@@ -32,45 +37,26 @@ export class Table {
 					e.setLabel("");
 				}
 				else {
-					// e.order = (e.order != "") ? "descending": "neutral";
+					column.update();
 				}
+				e.setIcon();
 			});
 		}
 		else {
-			column.update();	
-		}
-
-		const isRegistered = this.filters.includes(column);
-		const theLastColumn: number = this.filters.indexOf(column);
-		
-		// if (isPressingCtrl && isRegistered) {
-		// }
-		
-		if (isPressingCtrl && !isRegistered && column.order == "neutral") {
+			const isRegistered = this.filters.includes(column);
+			
+			if (!isRegistered) {
+				column.order = "neutral";
+				this.filters.push(column);
+			}
 			column.update();
-			this.filters.push(column);
-		}
-		else if (!isPressingCtrl && !isRegistered) {
-			column.order = "descending";
-			this.filters = [column];
 		}
 
-		if (column.order == "neutral") {	// TODO: WTF IS THIS WRONG ID
-			this.filters.splice(theLastColumn, 1);
+		if (column.order == "neutral") {
+			this.filters.splice(this.filters.indexOf(column), 1);
 			column.setLabel("");
 		}
 
-		this.columns.forEach((e) => {
-			e.setIcon();
-			if (e.order == "neutral") {
-				this.filters.splice(theLastColumn, 1);
-
-			}
-
-			if (e.order != "neutral") { return; }
-			e.order = "neutral";
-			e.setLabel("");
-		});
 		this.filters.forEach((e, i) => {
 			e.setLabel("(" + i.toString() + ")");
 			e.setIcon();

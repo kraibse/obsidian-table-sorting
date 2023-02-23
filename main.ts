@@ -74,7 +74,7 @@ export default class TableSort extends Plugin {
 			const columnIndex = table.getColumnIndex(element);
 			const column: Column = table.getColumnDataAt(columnIndex);
 
-			table.updateSortingOrder(column, evt.ctrlKey == true);
+			table.handleClick(column, evt.ctrlKey == true);
 			table.sort();
 		}, { capture: true });
 
