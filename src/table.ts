@@ -134,7 +134,6 @@ export class Table {
 		if (this.filters.length == 0) {
 			this.currentOrder = this.originalOrder;
 		} else {
-			// TODO: Enable sorting by column
 			this.currentOrder = Array.from(this.currentOrder).sort((rowA, rowB) => {
 				return compareRows(rowA, rowB);
 			});
