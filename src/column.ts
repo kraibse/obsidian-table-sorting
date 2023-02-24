@@ -33,7 +33,7 @@ export class Column {
     }
 
 	setLabel (label: string) {
-		console.log("Setting '" + this.getName() + "' to " + label);
+		console.log("Setting '" + this.getName() + "' to " + label, this.order);
 		
 		this.element.setAttribute('data-content', label);
 	}

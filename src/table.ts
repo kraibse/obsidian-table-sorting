@@ -116,8 +116,6 @@ export class Table {
 	}
 
 	sort(): void {
-		console.log(this.filters);
-
 		const compareRows = (rowA: HTMLElement, rowB: HTMLElement) => {
 			for (const filter of this.filters) {
 
