@@ -129,10 +129,10 @@ export class Table {
 				const valueA = cellA.textContent ? cellA.textContent.toLowerCase() : false;
 				const valueB = cellB.textContent ? cellB.textContent.toLowerCase() : false;
 
-				if (valueA < valueB) {
+				if (valueA < valueB || valueA == false) {
 					return -1 * filter.getWeight();
 				}
-				if (valueA > valueB) {
+				if (valueA > valueB || valueB == false) {
 					return 1 * filter.getWeight();
 				}
 			}
