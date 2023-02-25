@@ -47,6 +47,6 @@ export default class TableSort extends Plugin {
 	}
 
 	onunload() {
-
+		this.storage = [];
 	}
 }
