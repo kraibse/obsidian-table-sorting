@@ -1,10 +1,12 @@
 import { Plugin } from 'obsidian';
 import { Generator } from '@types/core-js';
 
+import { TableSortSettings, TableSortSettingsTab, DEFAULT_SETTINGS} from "./src/settings";
 import { Table } from "./src/table";
 import { getMousedownHandler } from "./src/mouseHandler"
 
 export default class TableSort extends Plugin {
+	settings: TableSortSettings;
 
 	storage: Table[] = [];
 	gen: Generator;
@@ -19,12 +21,12 @@ export default class TableSort extends Plugin {
 	getTableElement(th: HTMLElement): HTMLTableElement | undefined {
 		return th.closest("table") || undefined;
 	}
-	
+
 	getTableID(table: HTMLElement): number {
 		const id = table.getAttribute("id") ?.replace("table-", "");
 		return (id) ? parseInt(id) : this.gen.next().value;
 	}
-	
+
 	hasCustomClasses(table: HTMLElement): boolean {
 		const classes = table.getAttribute("class") || "";
 		if (classes.length > 0) {
@@ -32,18 +34,31 @@ export default class TableSort extends Plugin {
 		}
 		return false;
 	}
-	
+
 	isNewTable(id: number): boolean {
 		//  Return true if the user has selected a new table
 		return (this.storage.length - 1 >= id) ? false : true;
 	}
 
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
+	}
+
 	async onload() {
+		await this.loadSettings();
+		this.addSettingTab(new TableSortSettingsTab(this.app, this));
+
 		this.gen = this.autoIncrement();
 		this.storage = [];
-		
+
 		const mousedownHandler = getMousedownHandler(this);
-		this.registerDomEvent(document, 'click', mousedownHandler, { capture: true });
+		this.registerDomEvent(document, 'click', mousedownHandler, {
+			capture: true
+		});
 	}
 
 	onunload() {
