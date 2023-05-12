@@ -34,9 +34,9 @@ export class TableSortSettingsTab extends PluginSettingTab {
             .addToggle((toggle) => {
                 toggle
                     .setDisabled(false)
-                    .setValue(this.plugin.settings.isEnabled)
+                    .setValue(TableSort.settings.isEnabled)
                     .onChange(async (value) => {
-                        this.plugin.settings.isEnabled = value;
+                        TableSort.settings.isEnabled = value;
                         await this.plugin.saveSettings();
                     })
             });
@@ -49,10 +49,10 @@ export class TableSortSettingsTab extends PluginSettingTab {
             .setDesc("This enables development logging in the console.")
             .addToggle((toggle) => {
                 toggle
-                    .setDisabled(true)
-                    .setValue(this.plugin.settings.isDevmodeEnabled)
+                    .setDisabled(false)
+                    .setValue(TableSort.settings.isDevmodeEnabled)
                     .onChange(async (value) => {
-                        this.plugin.settings.isDevmodeEnabled = value;
+                        TableSort.settings.isDevmodeEnabled = value;
                         await this.plugin.saveSettings();
                     })
             });

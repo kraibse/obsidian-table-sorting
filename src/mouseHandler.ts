@@ -24,7 +24,7 @@ export function getMousedownHandler(plugin: TableSort) {
 
 		let table;
 		if (plugin.isNewTable(tableID)) {
-			table = new Table(tableID, tableElement);
+			table = new Table(tableID, tableElement, plugin);
 			plugin.storage.push(table);
 		} else {
 			table = plugin.storage[tableID];

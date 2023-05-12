@@ -5,8 +5,9 @@ import { TableSortSettings, TableSortSettingsTab, DEFAULT_SETTINGS} from "./src/
 import { Table } from "./src/table";
 import { getMousedownHandler } from "./src/mouseHandler"
 
+
 export default class TableSort extends Plugin {
-	settings: TableSortSettings;
+	static settings: TableSortSettings;
 
 	storage: Table[] = [];
 	gen: Generator;
@@ -41,11 +42,18 @@ export default class TableSort extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		TableSort.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
+	
+	static log(out?: any, ...optionalParams: any[]): void {
+		if (this.settings.isDevmodeEnabled === false) {
+			return;
+		}
+		console.log(out, optionalParams);
 	}
 
 	async saveSettings() {
-		await this.saveData(this.settings);
+		await this.saveData(TableSort.settings);
 	}
 
 	async onload() {
@@ -59,6 +67,8 @@ export default class TableSort extends Plugin {
 		this.registerDomEvent(document, 'click', mousedownHandler, {
 			capture: true
 		});
+
+		console.log("( obsidian-table-sorting ) Plugin has finished loading.");
 	}
 
 	onunload() {
