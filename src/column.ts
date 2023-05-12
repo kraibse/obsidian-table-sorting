@@ -1,3 +1,5 @@
+import TableSort from "../main";
+
 export class Column {
 	id: number;
 	order: string;
@@ -33,7 +35,7 @@ export class Column {
     }
 
 	setLabel (label: string) {
-		console.log("Setting '" + this.getName() + "' to " + label, this.order);
+		TableSort.log("Setting '" + this.getName() + "' to " + label, this.order);
 		
 		this.element.setAttribute('data-content', label);
 	}

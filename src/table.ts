@@ -1,18 +1,24 @@
+import TableSort from "../main";
 import { Column } from "./column";
 
 export class Table {
 	id: number;
 	column: number;
+	plugin: TableSort;
+
 	filters: Column[];
 	element: HTMLElement;
 	currentOrder: HTMLElement[];
 	originalOrder: HTMLElement[];
 
-	columns: Column[] = [];
+	columns: Column[];
 
-	constructor(id: number, element: HTMLTableElement) {
+	constructor(id: number, element: HTMLTableElement, plugin: TableSort) {
 		this.id = id || 0;
 		this.element = element;
+		this.plugin = plugin;
+		this.filters = [];
+		this.columns = [];
 		this.column = -1;
 		this.filters = [];
 		element.setAttribute("id", id.toString());
@@ -71,9 +77,9 @@ export class Table {
 		this._updateLabels();
 	}
 
-	fillTable(table: HTMLElement, rows: HTMLElement[]): void {
-		rows.forEach((row) => {
-			table.querySelector("tbody")?.appendChild(row);
+	fillTable(): void {
+		this.currentOrder.forEach((row) => {
+			this.element.querySelector("tbody")?.appendChild(row);
 		});
 	}
 
@@ -136,17 +142,18 @@ export class Table {
 			}
 			return 0;
 		};
-
+		
 		if (this.filters.length == 0) {
 			this.currentOrder = this.originalOrder;
 		} else {
 			this.currentOrder = Array.from(this.currentOrder).sort((rowA, rowB) => {
 				return compareRows(rowA, rowB);
 			});
+			TableSort.log("[obsidian-table-sorting] sort() - Finished sorting trows.")
 		}
 
 		// this.removeRows();
-		this.fillTable(this.element, this.currentOrder);
+		this.fillTable();
 	}
 
 	updateElement() {
