@@ -1,6 +1,4 @@
 import { Plugin } from 'obsidian';
-import { Generator } from '@types/core-js';
-
 import { TableSortSettings, TableSortSettingsTab, DEFAULT_SETTINGS} from "./src/settings";
 import { Table } from "./src/table";
 import { getMousedownHandler } from "./src/mouseHandler"
@@ -10,7 +8,7 @@ export default class TableSort extends Plugin {
 	static settings: TableSortSettings;
 
 	storage: Table[] = [];
-	gen: Generator;
+	gen: any;
 
 	* autoIncrement() {
 		let index = 0;
