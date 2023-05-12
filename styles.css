@@ -11,17 +11,6 @@ If your plugin does not need CSS, delete this file.
 	--text-color: #fff;
 }
 
-/* @media (hover: hover) */
-.markdown-source-view.mod-cm6 .cm-embed-block:hover {
-    /* box-shadow: none; */
-}
-
-tbody tr:hover {
-	background-color: #444654 !important;
-	color: white;
-}
-
-table,
 .cm-table-widget {
 	border-collapse: collapse !important;
 	width: 100%;
@@ -34,11 +23,6 @@ th::before {
 th::after {
 	width: 100%;
 	/* : 0.8rem; */
-}
-
-table:not([class]) th {
-	background-color: #1a1e24 !important;
-	padding: 0.4rem 0.8rempx;
 }
 
 table:not([class]) th::before, table th.neutral::before {
