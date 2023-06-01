@@ -12,7 +12,7 @@ export class Column {
 	}
 
 	getName(): string {
-		return this.element.innerHTML;
+		return this.element?.innerHTML;
 	}
 
 	getWeight(): number {
