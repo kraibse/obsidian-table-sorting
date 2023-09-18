@@ -2,22 +2,24 @@
 
 A plugin for the [Obsidian](https://obsidian.md) note-taking app that allows you to sort the rows of your tables by clicking on the `thead` elements.
 
-## Features
+# Features
 
+## Sorting a single column
 <div align="center">
 	<img src="attachments/preview-single-column.gif" />
-	<p>Sorting the columns by single clicking the column head.</p>
+	<p><strong>Left click</strong> on the column head.</p>
 </div>
 
-<hr>
 
+## Sorting multiple columns simultaneously
 <div align="center">
 	<img src="attachments/preview-multi-column.gif" />
-	<p>Sorting multiple columns hierarchically by additionally holding <strong>Control</strong></p>
+	<p>Press <strong>Control</strong> while left-clicking.</p>
 </div>
 
 ## Usage
-1.  Install the plugin by following the [Manual installation instructions](https://github.com/obsidianmd/obsidian-sample-plugin#manually-installing-the-plugin) and the [Obsidian plugin installation instructions](https://help.obsidian.md/Extending+Obsidian/Community+plugins).
+1.  Install the plugin by copying over the main.ts, styles.css and manifest.json to your vault `VaultFolder/.obsidian/plugins/obsidian-table-sorting/.
+	- (optional) Also refer to the [Obsidian plugin installation instructions](https://help.obsidian.md/Extending+Obsidian/Community+plugins).
 2.  Create a table in your Obsidian note.
 3.  Click on a `thead` element to sort the rows of the table by that column.
 4.  Click on the same `thead` element again to toggle between ascending, descending and neutral order.
