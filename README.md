@@ -25,9 +25,9 @@ Whatever sort mode you choose, the markdown sourcecode will not be touched. Inst
 1.  Install the plugin by copying over the `main.ts`, `styles.css` and `manifest.json` to your vault `VaultFolder/.obsidian/plugins/obsidian-table-sorting/`.
 	- (optional) Also refer to the [Obsidian plugin installation instructions](https://help.obsidian.md/Extending+Obsidian/Community+plugins).
 2.  Create a table in your Obsidian note.
-3.  Click on a `thead` element to sort the rows of the table by that column.
-4.  Click on the same `thead` element again to toggle between ascending, descending and neutral order.
-5.  Use `Control + LMB` to add a column to the sorting hierarchy. 
+3.  Click on a **column name** to sort the rows accordingly.
+4.  Click on the same **column name** again to toggle between ascending, descending and neutral order.
+5.  Use `Control + LMB` to add an additional column to the sorting hierarchy. 
 
 # Limitations
 
