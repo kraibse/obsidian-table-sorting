@@ -5,14 +5,14 @@ A plugin for the [Obsidian](https://obsidian.md) note-taking app that allows you
 ## Features
 
 <div align="center">
-	<img src="attachments/preview-single-column.gif" width=1442 />
+	<img src="attachments/preview-single-column.gif" />
 	<p>Sorting the columns by single clicking the column head.</p>
 </div>
 
 <hr>
 
 <div align="center">
-	<img src="attachments/preview-multi-column.gif" width=1442 />
+	<img src="attachments/preview-multi-column.gif" />
 	<p>Sorting multiple columns hierarchically by additionally holding <strong>Control</strong></p>
 </div>
 
