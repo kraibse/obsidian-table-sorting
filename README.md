@@ -1,8 +1,10 @@
 # Obsidian Table Sorting Plugin
 
-A plugin for the [Obsidian](https://obsidian.md) note-taking app that allows you to sort the rows of your tables by clicking on the `thead` elements.
+This essential plugin will finally allow you to organize your tables non-destructively right within Obsidian. Sorting by multiple columns is supported! 
 
 # Features
+
+Whatever sort mode you choose, the markdown sourcecode will not be touched. Instead the sorting all happens visually. Rightly restore the original order by cycling through the modes.
 
 ## Sorting a single column
 <div align="center">
@@ -16,6 +18,8 @@ A plugin for the [Obsidian](https://obsidian.md) note-taking app that allows you
 	<img src="attachments/preview-multi-column.gif" />
 	<p>Press <strong>Control</strong> while left-clicking.</p>
 </div>
+
+<br>
 
 ## Usage
 1.  Install the plugin by copying over the main.ts, styles.css and manifest.json to your vault `VaultFolder/.obsidian/plugins/obsidian-table-sorting/.
