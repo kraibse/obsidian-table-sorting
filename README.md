@@ -6,14 +6,14 @@ This essential plugin will finally allow you to organize your tables non-destruc
 
 Whatever sort mode you choose, the markdown sourcecode will not be touched. Instead the sorting all happens visually. Rightly restore the original order by cycling through the modes.
 
-## Sorting a single column
+## Sorting by a single column
 <div align="center">
 	<img src="attachments/preview-single-column.gif" />
 	<p><strong>Left click</strong> on the column head.</p>
 </div>
 
 
-## Sorting multiple columns simultaneously
+## Sorting by multiple columns simultaneously
 <div align="center">
 	<img src="attachments/preview-multi-column.gif" />
 	<p>Press <strong>Control</strong> while left-clicking.</p>
