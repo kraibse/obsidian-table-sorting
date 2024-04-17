@@ -1,6 +1,6 @@
-import { Plugin } from 'obsidian';
+import { Plugin, Menu } from 'obsidian';
 import { TableSortSettings, TableSortSettingsTab, DEFAULT_SETTINGS} from "./src/settings";
-import { Table } from "./src/table";
+import { Table, idPrefix } from "./src/table";
 import { getMousedownHandler } from "./src/mouseHandler"
 
 
@@ -18,11 +18,11 @@ export default class TableSort extends Plugin {
 	}
 
 	getTableElement(th: HTMLElement): HTMLTableElement | undefined {
-		return th.closest("table") || undefined;
+		return th.closest(".table-editor") || undefined;
 	}
 
 	getTableID(table: HTMLElement): number {
-		const id = table.getAttribute("id") ?.replace("table-", "");
+		const id = table.getAttribute("id") ?.replace(idPrefix, "");
 		return (id) ? parseInt(id) : this.gen.next().value;
 	}
 
@@ -62,9 +62,10 @@ export default class TableSort extends Plugin {
 		this.storage = [];
 
 		const mousedownHandler = getMousedownHandler(this);
-		this.registerDomEvent(document, 'click', mousedownHandler, {
+		this.registerDomEvent(document, 'contextmenu', mousedownHandler, {
 			capture: true
 		});
+
 
 		console.log("( obsidian-table-sorting ) Plugin has finished loading.");
 	}
