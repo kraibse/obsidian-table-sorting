@@ -38,6 +38,7 @@ export class TableSortSettingsTab extends PluginSettingTab {
                     .onChange(async (value) => {
                         TableSort.settings.isEnabled = value;
                         await this.plugin.saveSettings();
+                        console.log(`${value ? "Enabled": "Disabled" } the 'obsidian-table-sorting' plugin.`);
                     })
             });
 
@@ -54,6 +55,7 @@ export class TableSortSettingsTab extends PluginSettingTab {
                     .onChange(async (value) => {
                         TableSort.settings.isDevmodeEnabled = value;
                         await this.plugin.saveSettings();
+                        console.log(`${value ? "Enabled": "Disabled" } the 'obsidian-table-sorting' dev mode.`);
                     })
             });
     }
