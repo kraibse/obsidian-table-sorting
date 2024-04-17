@@ -12,7 +12,7 @@ export class Column {
 	}
 
 	getName(): string {
-		return this.element.innerHTML;
+		return this.element.querySelector(".table-cell-wrapper")?.innerHTML || "No name";
 	}
 
 	getWeight(): number {

@@ -1,7 +1,11 @@
 import TableSort from "../main";
 import { Column } from "./column";
 
+
+export const idPrefix: string = "ots-rt-";
+
 export class Table {
+
 	id: number;
 	column: number;
 	plugin: TableSort;
@@ -21,7 +25,7 @@ export class Table {
 		this.columns = [];
 		this.column = -1;
 		this.filters = [];
-		element.setAttribute("id", id.toString());
+		element.setAttribute("id", `${idPrefix}${id.toString()}`);
 		this.currentOrder = this.getTableRows();
 		this.originalOrder = this.currentOrder;
 	}
@@ -52,18 +56,25 @@ export class Table {
 	}
 
 	handleClick(column: Column, isPressingCtrl: boolean): void {
-		// sets the order for the column selection
-		const isRegistered = this.filters.includes(column);
+		/**
+		 * Handles the click event on a column.
+		 *
+		 * @param {Column} column - The column that was clicked.
+		 * @param {boolean} isPressingCtrl - Indicates whether the Ctrl key is being pressed.
+		 * @return {void} This function does not return anything.
+		 */
+
+		const isAlreadyFiltered = this.filters.includes(column);
 		
 		if (!isPressingCtrl) {
-			if (!isRegistered) {
+			if (!isAlreadyFiltered) {
 				column.order = "neutral";
 			}
 			this.filters = [column];
 			this._resetOtherColumns(column);
 		}
 		else {			
-			if (!isRegistered) {
+			if (!isAlreadyFiltered) {
 				column.order = "neutral";
 				this.filters.push(column);
 			}
@@ -72,6 +83,10 @@ export class Table {
 
 		if (column.order == "neutral") {
 			this._revertColumn(column);
+		}
+		else {
+			this.selectColumn(column);
+			console.log("Selecting column " + column.getName());
 		}
 
 		this._updateLabels();
@@ -97,9 +112,18 @@ export class Table {
 		return this.columns[id];
 	}
 
-	getColumnIndex(th: HTMLElement) {
-		this.updateElement();
-		return Array.prototype.indexOf.call(this.getTableHeads(), th);
+	getColumnIndex(element: HTMLElement) {
+		if (!element) {
+			return -1;
+		}
+		// this.updateElement();
+
+		const tag = element.tagName;
+
+		const cell: HTMLElement = (tag == "DIV") ? element.parentElement : element;
+		const siblings = Array.prototype.slice.call( cell?.parentElement?.children );
+
+		return siblings.indexOf(cell);
 	}
 
 	getTableHeads(): HTMLElement[] {
@@ -116,6 +140,35 @@ export class Table {
 	removeRows(rows: HTMLElement[]): void {
 		Array.from(rows).forEach((row) => {
 			row.remove();
+		});
+	}
+
+	selectColumn(column: Column): void {
+		const cells = [column.element].concat(this.getTableRows());
+
+		cells.forEach((row, position) => {
+			const isTopRow = position == 0;
+			const isBottomRow = position == (cells.length - 1);
+			const cellType = isTopRow ? "th" : "td";
+
+			// console.log("Selecting column ", row, this.element.querySelector(cellType));
+			const cell = isTopRow ? this.element : row.querySelectorAll(cellType)[column.id];
+
+			const classes = ['is-selected', 'start', 'end'];
+			
+			if (isTopRow) {
+				classes.push('top');
+			}
+			if (isBottomRow) {
+				classes.push('bottom');
+			}
+
+			console.log(cell);
+			if (!cell.classList.contains("is-selected")) {
+				cell.classList.add(...classes);
+			}
+			// console.log(cell, classes, cell.classList, ...classes.split(" "));
+			console.log(isTopRow ? column.element : undefined);
 		});
 	}
 
@@ -157,7 +210,7 @@ export class Table {
 	}
 
 	updateElement() {
-		const element = document.getElementById(this.id.toString()) as HTMLElement;
+		const element = document.getElementById(`${idPrefix}${this.id.toString()}`) as HTMLElement;
 		if (!element) {
 			console.error("Found no registered table with the corresponding id.");
 		}
