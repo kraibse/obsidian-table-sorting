@@ -23,7 +23,8 @@ export class Column {
 	}
 
 	reset() {
-
+		this.order = "neutral";
+		this.setIcon();
 	}
 
     setIcon() {

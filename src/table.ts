@@ -31,15 +31,8 @@ export class Table {
 	}
 
 	_resetOtherColumns(column: Column): void {
-		this.columns.forEach((e) => {
-			if (e !== column) {
-				e.order = "neutral";
-				e.setLabel("");
-			}
-			else {
-				column.update();
-			}
-			e.setIcon();
+		this.columns.filter((c) => c !== column).forEach((c) => {
+			c.reset();
 		});
 	}
 
@@ -55,6 +48,18 @@ export class Table {
 		});
 	}
 
+	deselectAll(): void {
+		console.log("Deselecting all: ", this.columns);
+		for (let i = 0; i < this.getTableHeads().length; i++) {
+			let cells = this.getColumnCells(i);
+
+			cells.forEach((cell) => {
+				cell.classList.remove('is-selected', 'top', 'bottom');
+			});
+		}
+		// console.log("Done deselecting all");
+	}
+
 	handleClick(column: Column, isPressingCtrl: boolean): void {
 		/**
 		 * Handles the click event on a column.
@@ -63,39 +68,48 @@ export class Table {
 		 * @param {boolean} isPressingCtrl - Indicates whether the Ctrl key is being pressed.
 		 * @return {void} This function does not return anything.
 		 */
-
-		const isAlreadyFiltered = this.filters.includes(column);
 		
-		if (!isPressingCtrl) {
-			if (!isAlreadyFiltered) {
-				column.order = "neutral";
-			}
-			this.filters = [column];
-			this._resetOtherColumns(column);
-		}
-		else {			
-			if (!isAlreadyFiltered) {
-				column.order = "neutral";
-				this.filters.push(column);
-			}
-			column.update();
-		}
-
-		if (column.order == "neutral") {
-			this._revertColumn(column);
+		if (isPressingCtrl) {
+			this.filters.push(column);
 		}
 		else {
-			this.selectColumn(column);
-			console.log("Selecting column " + column.getName());
+			this._resetOtherColumns(column);
+			this.filters = [column];
 		}
-
-		this._updateLabels();
+		
+		const isAlreadyFiltered = this.filters.includes(column);
+		if (isAlreadyFiltered && column.order === "neutral") {
+			this.removeFromFilters(column);
+		}
 	}
 
 	fillTable(): void {
 		this.currentOrder.forEach((row) => {
 			this.element.querySelector("tbody")?.appendChild(row);
 		});
+	}
+
+	getColumnCells(position: number): HTMLElement[] {
+		/**
+		 * Retrieves the cells for a specific column position.
+		 *
+		 * @param {number} position - The position of the column.
+		 * @return {HTMLElement[]} An array of HTMLElement representing the cells of the column.
+		 */
+
+		// if (position < 0 || position >= this.columns.length - 1) {
+		// 	return [];
+		// }
+		
+		const column = this.getColumnDataAt(position);
+		const cells = [column.element];
+
+		this.getTableRows().forEach((row) => {
+			const cell = row.querySelectorAll("td")[column.id];
+			cells.push(cell);
+		});
+
+		return cells;
 	}
 
 	getColumnDataAt(id: number): Column {
@@ -137,6 +151,10 @@ export class Table {
 		return Array.from(rowElements).splice(1, rowElements.length);	// excluding thead row
 	}
 
+	removeFromFilters(column: Column): void {
+		this.filters.splice(this.filters.indexOf(column), 1);
+	}
+
 	removeRows(rows: HTMLElement[]): void {
 		Array.from(rows).forEach((row) => {
 			row.remove();
@@ -152,7 +170,7 @@ export class Table {
 			const cellType = isTopRow ? "th" : "td";
 
 			// console.log("Selecting column ", row, this.element.querySelector(cellType));
-			const cell = isTopRow ? this.element : row.querySelectorAll(cellType)[column.id];
+			const cell = isTopRow ? column.element : row.querySelectorAll(cellType)[column.id];
 
 			const classes = ['is-selected', 'start', 'end'];
 			
@@ -163,12 +181,13 @@ export class Table {
 				classes.push('bottom');
 			}
 
-			console.log(cell);
+			// console.log(cell);
 			if (!cell.classList.contains("is-selected")) {
 				cell.classList.add(...classes);
 			}
 			// console.log(cell, classes, cell.classList, ...classes.split(" "));
-			console.log(isTopRow ? column.element : undefined);
+			// console.log((isTopRow) ? column.element : undefined);
+			// console.log(isTopRow, isBottomRow, cellType);
 		});
 	}
 
@@ -183,13 +202,13 @@ export class Table {
 					return 0;
 				}
 
-				const valueA = cellA.textContent ? cellA.textContent.toLowerCase() : false;
-				const valueB = cellB.textContent ? cellB.textContent.toLowerCase() : false;
+				const valueA = cellA.textContent ? cellA.textContent.toLowerCase() : "";
+				const valueB = cellB.textContent ? cellB.textContent.toLowerCase() : "";
 
-				if (valueA < valueB || valueA == false) {
+				if (valueA < valueB) {
 					return -1 * filter.getWeight();
 				}
-				if (valueA > valueB || valueB == false) {
+				if (valueA > valueB) {
 					return 1 * filter.getWeight();
 				}
 			}

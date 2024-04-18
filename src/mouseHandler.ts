@@ -52,33 +52,38 @@ export function getMousedownHandler(plugin: TableSort) {
 		
 		const menu: ContextMenuInterface = new ContextMenu(openedMenu as Element, plugin);
 		menu.addSeparator();
-		menu.addSectionHeader("Plugin - Table Sorting", "center");
+		menu.addSectionHeader("Table Sorting - Temporary Sorting", "center");
 		menu.addAction(() => {
 
 			// TODO: Figure out where to place handleClick and when to select column
 			// also, find a way to select TH elements too
 
 			column.order = "ascending";	
-			table.filters = [column];
-			table.sort();
+			// table.filters = [column];
 			table.handleClick(column, evt.ctrlKey == true);
+			table.sort();
+			table.deselectAll();
+			table.selectColumn(column);
 		}, "Sort temporarily by column (A to Z)", "table-sort");
         menu.addAction(() => {
 			column.order = "descending";
-			table.filters = [column];
-			table.sort();
+			// table.filters = [column];
 			table.handleClick(column, evt.ctrlKey == true);
+			table.sort();
+			table.deselectAll();
+			table.selectColumn(column);
 		}, "Sort temporarily by column (Z to A)", "table-sort");
         menu.addAction(() => {
 			column.order = "neutral";
-			table.filters = [];
-			table.sort();
+			// table.filters = [];
 			table.handleClick(column, evt.ctrlKey == true);
+			table.sort();
+			table.deselectAll();
 		}, "Reset filters", "table-sort");
 
 
 		if (table.filters.length > 0) {
-			menu.addSectionHeader(`Sorting by - ${column.getName()} ${column.order}`, "center");
+			menu.addSectionHeader(`Sorting '${column.getName()}' by ${column.order}`, "center");
 		}
 	}
 }
