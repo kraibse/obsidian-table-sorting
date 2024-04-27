@@ -18,7 +18,7 @@ export default class TableSort extends Plugin {
 	}
 
 	getTableElement(th: HTMLElement): HTMLTableElement | undefined {
-		return th.closest(".table-editor") || undefined;
+		return th.closest(".table-editor") as HTMLTableElement || undefined;
 	}
 
 	getTableID(table: HTMLElement): number {
@@ -67,7 +67,7 @@ export default class TableSort extends Plugin {
 		});
 
 
-		console.log("( obsidian-table-sorting ) Plugin has finished loading.");
+		TableSort.log("( obsidian-table-sorting ) Plugin has finished loading.");
 	}
 
 	onunload() {
