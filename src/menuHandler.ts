@@ -15,7 +15,7 @@ export class ContextMenu implements ContextMenuInterface {
     element: Element;
 
     constructor(element: Element | HTMLCollectionOf<Element>, plugin: TableSort) {
-        // console.log("Created context menu: ", element);
+        // TableSort.log("Created context menu: ", element);
         if (element instanceof HTMLCollection) {
             this.element = element[0];
         } else {
@@ -98,12 +98,11 @@ export async function getMenuElement() {
 
     getOpenMenu.then((result: HTMLCollectionOf<Element> | undefined) => {
         if (!result) {
-            console.log("Did not find the contextmenu...");
+            TableSort.log("Did not find the contextmenu...");
             return null;
         }
 
-        result = result[0];
-        return result;
+        return result[0];
     });
 
     const menu = await getOpenMenu;
