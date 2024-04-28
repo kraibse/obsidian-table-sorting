@@ -81,3 +81,38 @@ table:not([class]) th.ascending::after {
 	content: attr(data-content);
 	color: var(--text-muted);
 }
+
+
+.cm-table-widget {
+	height: fit-content !important;
+	padding-top: 1.5rem !important;
+}
+
+.table-col-drag-handle.opacity-100 {
+	top: -2px !important;
+	/* justify-content: start !important;
+	padding-left: 0.3rem !important; */
+	height: fit-content !important;
+	/* overflow-y: visible !important; */
+}
+
+/* .table-col-drag-handle.opacity-100 > span {
+	display: none;
+} */
+
+
+.short > span {
+	display: none;
+}
+
+.hidden {
+	display: none;
+}
+
+.opacity-0 {
+	opacity: 0 !important;
+}
+
+.opacity-100 {
+	opacity: 1 !important;
+}
