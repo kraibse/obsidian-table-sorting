@@ -6,25 +6,21 @@ export const idPrefix: string = "ots-rt-";
 
 export class Table {
 
-	id: number;
+	id: number = -1;
 	column: number;
 	plugin: TableSort;
 
-	filters: Column[];
+	filters: Column[] = [];
 	element: HTMLElement;
 	currentOrder: HTMLElement[];
 	originalOrder: HTMLElement[];
 
-	columns: Column[];
+	columns: Column[] = [];
 
 	constructor(id: number, element: HTMLTableElement, plugin: TableSort) {
 		this.id = id || 0;
 		this.element = element;
 		this.plugin = plugin;
-		this.filters = [];
-		this.columns = [];
-		this.column = -1;
-		this.filters = [];
 		element.setAttribute("id", `${idPrefix}${id.toString()}`);
 		this.currentOrder = this.getTableRows();
 		this.originalOrder = this.currentOrder;
@@ -32,13 +28,8 @@ export class Table {
 
 	_resetOtherColumns(column: Column): void {
 		this.columns.filter((c) => c !== column).forEach((c) => {
-			c.reset();
+			c.deselect();
 		});
-	}
-
-	_revertColumn(column: Column): void {
-		this.filters.splice(this.filters.indexOf(column), 1);
-		column.setLabel("");	
 	}
 
 	_updateLabels(): void {
@@ -48,19 +39,20 @@ export class Table {
 		});
 	}
 
-	deselectAll(): void {
-		console.log("Deselecting all: ", this.columns);
-		for (let i = 0; i < this.getTableHeads().length; i++) {
-			let cells = this.getColumnCells(i);
+	containsColumn(column: Column): boolean {
+		const contains = this.filters.includes(column);
+		TableSort.log(contains, this.filters);
+		return this.filters.includes(column);
 
-			cells.forEach((cell) => {
-				cell.classList.remove('is-selected', 'top', 'bottom');
-			});
-		}
-		// console.log("Done deselecting all");
 	}
 
-	handleClick(column: Column, isPressingCtrl: boolean): void {
+	deselectAll(): void {
+		TableSort.log("Deselecting all: ", this.columns);
+
+		// TableSort.log("Done deselecting all");
+	}
+
+	handleClick(column: Column): void {
 		/**
 		 * Handles the click event on a column.
 		 *
@@ -68,19 +60,22 @@ export class Table {
 		 * @param {boolean} isPressingCtrl - Indicates whether the Ctrl key is being pressed.
 		 * @return {void} This function does not return anything.
 		 */
-		
-		if (isPressingCtrl) {
-			this.filters.push(column);
-		}
-		else {
-			this._resetOtherColumns(column);
-			this.filters = [column];
+
+		if (column.isSelected) return;
+
+		if (!this.containsColumn(column)) {
+			this.reset();
 		}
 		
-		const isAlreadyFiltered = this.filters.includes(column);
-		if (isAlreadyFiltered && column.order === "neutral") {
-			this.removeFromFilters(column);
-		}
+		this.filters.push(column);
+		column.select();
+
+		// this.updateColumns();
+
+		// const isAlreadyFiltered = this.filters.includes(column);
+		// if (isAlreadyFiltered && column.order === "neutral") {
+		// 	this.removeFromFilters(column);
+		// }
 	}
 
 	fillTable(): void {
@@ -100,8 +95,8 @@ export class Table {
 		// if (position < 0 || position >= this.columns.length - 1) {
 		// 	return [];
 		// }
-		
-		const column = this.getColumnDataAt(position);
+
+		const column = this.getColumn(position);
 		const cells = [column.element];
 
 		this.getTableRows().forEach((row) => {
@@ -112,17 +107,17 @@ export class Table {
 		return cells;
 	}
 
-	getColumnDataAt(id: number): Column {
+	getColumn(id: number): Column {
 		// if (id == -1) {
 		// 	return new Column(id, element, "neutral");
 		// }
 		const element: HTMLElement = this.getTableHeads()[id];
 		if (!this.columns[id]) {
-			const column = new Column(id, element, "neutral");
+			const column = new Column(id, element, "neutral", this);
 			this.columns[id] = column;
 			return column;
 		}
-		
+
 		return this.columns[id];
 	}
 
@@ -134,10 +129,14 @@ export class Table {
 
 		const tag = element.tagName;
 
-		const cell: HTMLElement = (tag == "DIV") ? element.parentElement : element;
-		const siblings = Array.prototype.slice.call( cell?.parentElement?.children );
+		const cell: HTMLElement | null = (tag == "DIV") ? element.parentElement : element;
+		const siblings = Array.prototype.slice.call(cell?.parentElement?.children);
 
 		return siblings.indexOf(cell);
+	}
+
+	getFilterPriority(column: Column): number {
+		return this.filters.indexOf(column);
 	}
 
 	getTableHeads(): HTMLElement[] {
@@ -151,6 +150,12 @@ export class Table {
 		return Array.from(rowElements).splice(1, rowElements.length);	// excluding thead row
 	}
 
+	removeFilter(column: Column): void {
+		this.filters.splice(this.filters.indexOf(column), 1);
+		column.deselect();
+		column.update();
+	}
+
 	removeFromFilters(column: Column): void {
 		this.filters.splice(this.filters.indexOf(column), 1);
 	}
@@ -161,6 +166,23 @@ export class Table {
 		});
 	}
 
+	reset() {
+		this.filters = [];
+		this.columns.forEach((c) => {
+			c.deselect();
+		});
+		this.currentOrder = this.originalOrder;
+
+		for (let i = 0; i < this.getTableHeads().length; i++) {
+			this.getColumn(i).deselect();
+
+			const cells = this.getColumnCells(i);
+			cells.forEach((cell) => {
+				cell.classList.remove('is-selected', 'top', 'bottom');
+			});
+		}
+	}
+
 	selectColumn(column: Column): void {
 		const cells = [column.element].concat(this.getTableRows());
 
@@ -169,11 +191,11 @@ export class Table {
 			const isBottomRow = position == (cells.length - 1);
 			const cellType = isTopRow ? "th" : "td";
 
-			// console.log("Selecting column ", row, this.element.querySelector(cellType));
+			// TableSort.log("Selecting column ", row, this.element.querySelector(cellType));
 			const cell = isTopRow ? column.element : row.querySelectorAll(cellType)[column.id];
 
 			const classes = ['is-selected', 'start', 'end'];
-			
+
 			if (isTopRow) {
 				classes.push('top');
 			}
@@ -181,14 +203,16 @@ export class Table {
 				classes.push('bottom');
 			}
 
-			// console.log(cell);
+			// TableSort.log(cell);
 			if (!cell.classList.contains("is-selected")) {
 				cell.classList.add(...classes);
 			}
-			// console.log(cell, classes, cell.classList, ...classes.split(" "));
-			// console.log((isTopRow) ? column.element : undefined);
-			// console.log(isTopRow, isBottomRow, cellType);
+			// TableSort.log(cell, classes, cell.classList, ...classes.split(" "));
+			// TableSort.log((isTopRow) ? column.element : undefined);
+			// TableSort.log(isTopRow, isBottomRow, cellType);
 		});
+
+		column.select();
 	}
 
 	sort(): void {
@@ -214,7 +238,7 @@ export class Table {
 			}
 			return 0;
 		};
-		
+
 		if (this.filters.length == 0) {
 			this.currentOrder = this.originalOrder;
 		} else {
@@ -226,6 +250,15 @@ export class Table {
 
 		// this.removeRows();
 		this.fillTable();
+	}
+
+	updateColumns() {
+		this.columns.forEach((column) => {
+			if (!this.containsColumn(column)) {
+				column.deselect();
+			}
+			column.update();
+		});
 	}
 
 	updateElement() {
