@@ -2,7 +2,9 @@ import TableSort from "../main";
 import { Table } from "./table";
 import { Column } from "./column";
 import { getMenuElement, ContextMenu, ContextMenuInterface } from "./menuHandler";
+import { SORT_SELECTED } from "./icons";
 
+import { Notice } from "obsidian";
 
 
 export function getMousedownHandler(plugin: TableSort) {
@@ -36,7 +38,7 @@ export function getMousedownHandler(plugin: TableSort) {
 		if (plugin.isNewTable(tableID)) {
 			table = new Table(tableID, tableElement, plugin);
 			plugin.storage.push(table);
-			console.log("New table: ", tableID);
+			TableSort.log("New table: ", tableID);
 		} else {
 			table = plugin.storage[tableID];
 		}
@@ -44,9 +46,9 @@ export function getMousedownHandler(plugin: TableSort) {
 		new Notice(`Clicked table #${tableID}.`);
 
 		const columnIndex = table.getColumnIndex(element);
-		const column: Column = table.getColumnDataAt(columnIndex);
+		const column: Column = table.getColumn(columnIndex);
 
-		console.log(columnIndex, column);
+		TableSort.log(columnIndex, column);
 
 		// table.sort();
 		
@@ -56,35 +58,40 @@ export function getMousedownHandler(plugin: TableSort) {
 		menu.addAction(() => {
 
 			// TODO: Figure out where to place handleClick and when to select column
-			// also, find a way to select TH elements too
 
-			column.order = "ascending";	
-			// table.filters = [column];
-			table.handleClick(column, evt.ctrlKey == true);
+			table.handleClick(column);
+			column.order = "ascending";
 			table.sort();
-			table.deselectAll();
-			table.selectColumn(column);
+			table.updateColumns();
 		}, "Sort temporarily by column (A to Z)", "table-sort");
+
         menu.addAction(() => {
+			table.handleClick(column);
 			column.order = "descending";
-			// table.filters = [column];
-			table.handleClick(column, evt.ctrlKey == true);
 			table.sort();
-			table.deselectAll();
-			table.selectColumn(column);
+			table.updateColumns();
 		}, "Sort temporarily by column (Z to A)", "table-sort");
-        menu.addAction(() => {
-			column.order = "neutral";
-			// table.filters = [];
-			table.handleClick(column, evt.ctrlKey == true);
-			table.sort();
-			table.deselectAll();
+
+
+		const isSelected = column.isSelected;
+		menu.addAction(() => {
+			if (isSelected) {
+				column.deselect();
+				table.removeFilter(column);
+			}
+			else {
+				column.select();
+				if (!table.containsColumn(column)) {
+					table.filters.push(column);
+				}
+			}
+			table.updateColumns();
+		},
+		(isSelected) ? "Deselect" : "Select", "table-sort");
+
+		menu.addAction(() => {
+			table.reset();
 		}, "Reset filters", "table-sort");
-
-
-		if (table.filters.length > 0) {
-			menu.addSectionHeader(`Sorting '${column.getName()}' by ${column.order}`, "center");
-		}
 	}
 }
 
@@ -92,13 +99,7 @@ export function getMousedownHandler(plugin: TableSort) {
 function addActionToMenu(menu: HTMLDivElement, action: Function, title: string, dataSection?: string) {
 	const menuItemHTML = `
 			<div class="menu-item-icon">
-				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-arrow-up-az">
-					<path d="m3 8 4-4 4 4"></path>
-					<path d="M7 4v16"></path>
-					<path d="M20 8h-5"></path>
-					<path d="M15 10V6.5a2.5 2.5 0 0 1 5 0V10"></path>
-					<path d="M15 14h5l-5 6h5"></path>
-				</svg>
+				${SORT_SELECTED}
 			</div>
 			<div class="menu-item-title">${title}</div>
 	`;
