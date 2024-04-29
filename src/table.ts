@@ -171,16 +171,9 @@ export class Table {
 		this.columns.forEach((c) => {
 			c.deselect();
 		});
+
 		this.currentOrder = this.originalOrder;
-
-		for (let i = 0; i < this.getTableHeads().length; i++) {
-			this.getColumn(i).deselect();
-
-			const cells = this.getColumnCells(i);
-			cells.forEach((cell) => {
-				cell.classList.remove('is-selected', 'top', 'bottom');
-			});
-		}
+		this.sort();
 	}
 
 	selectColumn(column: Column): void {
@@ -256,6 +249,10 @@ export class Table {
 		this.columns.forEach((column) => {
 			if (!this.containsColumn(column)) {
 				column.deselect();
+				console.log("Deselecting column", column);
+			}
+			else {
+				column.select();
 			}
 			column.update();
 		});
