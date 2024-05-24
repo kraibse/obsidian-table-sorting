@@ -28,9 +28,6 @@ https://github.com/kraibse/obsidian-table-sorting/assets/33869366/28468e05-9ea3-
 <p><strong>Select multiple columns</strong> to set their order when sorting hierarchically.</p>
 </div>
 
-<br>
-<br>
-
 
 <div align="center">
 <h2>... and be able to reset them to their original state</h2>
