@@ -87,25 +87,35 @@ export class ContextMenu implements ContextMenuInterface {
 
 export async function getMenuElement() {
     // TODO: Convert to HtmlObserver to remove the hardcoded waiting time
-    
-    const getOpenMenu = new Promise((resolve, reject) => {
-        var openedMenus:  HTMLCollectionOf<Element>;
-        setTimeout(() => {
-            openedMenus = document.getElementsByClassName("menu");
-            (!openedMenus || openedMenus.length == 0) ? resolve(null) : resolve(openedMenus);
-        }, 1);
-    });
+    const observer = new MutationObserver((mutations, observer) => {
+		mutations.forEach((mutation) => {
+			if (mutation.type == 'childList') {
+				const addedNodes = mutation.addedNodes;
+				for (let i = 0; i < addedNodes.length; i++) {
+					const currentNode = addedNodes[i] as HTMLDivElement;
+					if (currentNode.classList.contains("menu")) {
+						observer.disconnect();
+						return addedNodes[i];
+					}
+				}
+			}
+		});
+	});
 
-    getOpenMenu.then((result: HTMLCollectionOf<Element> | undefined) => {
-        if (!result) {
-            TableSort.log("Did not find the contextmenu...");
-            return null;
-        }
+	observer.observe(document, { childList: true, subtree: true });
 
-        return result[0];
-    });
+	const getOpenMenu = new Promise((resolve) => {
+		const interval = setInterval(() => {
+			const openMenus = document.getElementsByClassName("menu");
+			if (openMenus.length > 0) {
+				clearInterval(interval);
+				const currentContextMenu = openMenus[0];
+				resolve(currentContextMenu);
+			}
+		});
+	});
 
     const menu = await getOpenMenu;
-    return await getOpenMenu;
+    return menu;
 }
 
