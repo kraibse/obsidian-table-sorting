@@ -89,7 +89,7 @@ table:not([class]) th.ascending::after {
 }
 
 .table-col-drag-handle.opacity-100 {
-	top: -2px !important;
+	/* top: -2px !important; */
 	/* justify-content: start !important;
 	padding-left: 0.3rem !important; */
 	height: fit-content !important;
