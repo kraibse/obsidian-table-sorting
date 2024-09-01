@@ -46,7 +46,10 @@ export class ContextMenu implements ContextMenuInterface {
 
         menuItem.innerHTML = menuItemHTML;
 
-        menuItem.addEventListener("click", () => { action(); });
+        menuItem.addEventListener("click", () => {
+			action();
+			document.body.removeChild(menuItem.parentElement as Node);
+		});
 
         menuItem.addEventListener("mouseenter", () => {
             menuItem.parentElement?.querySelector(".selected")?.classList.remove("selected");
@@ -85,15 +88,20 @@ export class ContextMenu implements ContextMenuInterface {
 
 
 
-export async function getMenuElement() {
-    // TODO: Convert to HtmlObserver to remove the hardcoded waiting time
+export async function getMenuElement(event: MouseEvent, plugin: TableSort) {
+	if (plugin.getViewMode() === "preview") {
+		return spawnMenuElement(event);
+	}
+
     const observer = new MutationObserver((mutations, observer) => {
 		mutations.forEach((mutation) => {
 			if (mutation.type == 'childList') {
 				const addedNodes = mutation.addedNodes;
 				for (let i = 0; i < addedNodes.length; i++) {
-					const currentNode = addedNodes[i] as HTMLDivElement;
-					if (currentNode.classList.contains("menu")) {
+					const currentNode = addedNodes[i] as HTMLElement;
+					const containsMenu = currentNode.classList.contains("menu");
+					console.log(containsMenu);
+					if (containsMenu) {
 						observer.disconnect();
 						return addedNodes[i];
 					}
@@ -119,3 +127,20 @@ export async function getMenuElement() {
     return menu;
 }
 
+
+function spawnMenuElement(event: MouseEvent) {
+	const menu = document.createElement("div");
+	menu.classList.add("menu");
+	
+	menu.style.left = `${event.clientX}px`;
+	menu.style.top = `${event.clientY}px`;
+	
+	document.addEventListener("click", (event) => {
+		if (document.body.contains(menu as Node)) {
+			document.body.removeChild(menu);
+		}
+	});
+
+	document.body.appendChild(menu);
+	return menu;
+}
