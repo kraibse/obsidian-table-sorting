@@ -15,16 +15,30 @@ export function getMousedownHandler(plugin: TableSort) {
 
 		const element: HTMLElement = evt.target as HTMLElement;
 
+		TableSort.log("Clicked element: ", element);
+
 		const tableElement: HTMLTableElement | undefined = plugin.getTableElement(element);
+
+		TableSort.log("Table element: ", tableElement);
+
+		const isNoPluginTable: boolean = (!plugin.hasCustomClasses(tableElement as HTMLElement)) && plugin.getViewMode() === "source";
+
+		TableSort.log("isNoPluginTable: ", isNoPluginTable);
+
+		// TableSort.log("Has clicked element: ", hasClickedTable(tableElement as HTMLElement));
+
+
 		if (!tableElement) {
 			return;
 		}
 
-		if (!tableElement || !plugin.hasCustomClasses(tableElement) || !hasClickedTable(tableElement)) {
+		if (!tableElement || isNoPluginTable) {
 			return;
 		}
 		
-		const openedMenu: unknown  = await getMenuElement();
+		const openedMenu: unknown  = await getMenuElement(evt, plugin);
+		TableSort.log("Opened menu: ", openedMenu);
+
 		if (!openedMenu) {
 			return;
 		}
