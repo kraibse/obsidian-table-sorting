@@ -1,4 +1,4 @@
-import { Plugin, Menu } from 'obsidian';
+import { Plugin, Menu, MarkdownViewModeType, MarkdownView } from 'obsidian';
 import { TableSortSettings, TableSortSettingsTab, DEFAULT_SETTINGS} from "./src/settings";
 import { Table, idPrefix } from "./src/table";
 import { getMousedownHandler } from "./src/mouseHandler"
@@ -17,13 +17,35 @@ export default class TableSort extends Plugin {
 		}
 	}
 
-	getTableElement(th: HTMLElement): HTMLTableElement | undefined {
-		return th.closest(".table-editor") as HTMLTableElement || undefined;
+	getTableElement(element: HTMLElement): HTMLTableElement | undefined {
+		const isTableCell = this.isTableCell(element);
+		TableSort.log("isTableCell: ", isTableCell);
+
+		if (!isTableCell) {
+			return undefined;
+		}
+		
+		const viewMode = this.getViewMode();
+		if (viewMode === "source") {
+			return element.closest(".table-editor") as HTMLTableElement || undefined;
+		}
+		else if (viewMode === "preview") {
+			return element.closest("table") as HTMLTableElement || undefined;	
+		}
+		else {
+			return undefined;
+		}
+
 	}
 
 	getTableID(table: HTMLElement): number {
 		const id = table.getAttribute("id") ?.replace(idPrefix, "");
 		return (id) ? parseInt(id) : this.gen.next().value;
+	}
+
+	getViewMode() {
+		const currentView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		return currentView?.getMode();
 	}
 
 	hasCustomClasses(table: HTMLElement): boolean {
@@ -37,6 +59,22 @@ export default class TableSort extends Plugin {
 	isNewTable(id: number): boolean {
 		//  Return true if the user has selected a new table
 		return (this.storage.length - 1 >= id) ? false : true;
+	}
+
+	isTableCell (element: HTMLElement): boolean {
+		const tableCellTags = ["TD", "TH", "TR"];
+		const isNotTableCell = !(tableCellTags.includes(element.tagName));
+		const isParentTableCell = tableCellTags.includes(element.parentElement?.tagName || "div");
+		
+		if (element.tagName === "DIV") {
+			return isParentTableCell;
+		}
+
+		if (isNotTableCell) {
+			return false;
+		}
+		
+		return true;
 	}
 
 	async loadSettings() {
