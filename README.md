@@ -55,6 +55,9 @@ https://github.com/kraibse/obsidian-table-sorting/assets/33869366/e46b9a2e-8a22-
 
 - Numeric data must be properly formatted for accurate sorting (WIP)
 - Dataview tables are currently not supported (WIP)
+- Currently limited to the Live Preview edit mode
+   - Preview mode is currently in development
+   - Source edit mode is currently not planned
 
 # Contributing
 
