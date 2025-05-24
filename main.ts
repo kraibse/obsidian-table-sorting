@@ -67,6 +67,72 @@ export default class TableSort extends Plugin {
 		});
 
 
+		this.registerEvent(
+			this.app.workspace.on("editor-menu", (menu, editor, view) => {
+				const cell = document.querySelector("th:hover, td:hover");
+				if (!cell) return;
+				const tableElement = cell.closest(".table-editor");
+				if (!tableElement) return;
+
+				const tableID = this.getTableID(tableElement as HTMLElement);
+				let table: Table;
+				if (this.isNewTable(tableID)) {
+					table = new Table(tableID, tableElement as HTMLTableElement, this);
+					this.storage.push(table);
+				} else {
+					table = this.storage[tableID];
+				}
+				const columnIndex = table.getColumnIndex(cell as HTMLElement);
+				const column = table.getColumn(columnIndex);
+
+				menu.addSeparator();
+				menu.addItem((item) =>
+					item.setTitle("Sort temporarily by column (A to Z)")
+						.setIcon("arrow-up-a-z")
+						.onClick(() => {
+							table.handleClick(column);
+							column.order = "ascending";
+							table.sort();
+							table.updateColumns();
+						})
+				);
+				menu.addItem((item) =>
+					item.setTitle("Sort temporarily by column (Z to A)")
+						.setIcon("arrow-down-z-a")
+						.onClick(() => {
+							table.handleClick(column);
+							column.order = "descending";
+							table.sort();
+							table.updateColumns();
+						})
+				);
+				menu.addItem((item) =>
+					item.setTitle(column.isSelected ? "Deselect" : "Select")
+						.setIcon("check-circle")
+						.onClick(() => {
+							if (column.isSelected) {
+								column.deselect();
+								table.removeFilter(column);
+							} else {
+								column.select();
+								if (!table.containsColumn(column)) {
+									table.filters.push(column);
+								}
+							}
+							table.updateColumns();
+						})
+				);
+				menu.addItem((item) =>
+					item.setTitle("Reset filters")
+						.setIcon("rotate-ccw")
+						.onClick(() => {
+							table.reset();
+						})
+				);
+			})
+		);
+
+
 		TableSort.log("( obsidian-table-sorting ) Plugin has finished loading.");
 	}
 
