@@ -1,4 +1,4 @@
-import TableSort from "main";
+import TableSort from "../main";
 
 
 export interface ContextMenuInterface {
