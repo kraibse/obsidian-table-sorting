@@ -1,13 +1,10 @@
 import TableSort from "../main";
 import { Column } from "./column";
 
-
 export const idPrefix: string = "ots-rt-";
 
 export class Table {
-
 	id: number = -1;
-	column: number;
 	plugin: TableSort;
 
 	filters: Column[] = [];
@@ -27,9 +24,11 @@ export class Table {
 	}
 
 	_resetOtherColumns(column: Column): void {
-		this.columns.filter((c) => c !== column).forEach((c) => {
-			c.deselect();
-		});
+		this.columns
+			.filter((c) => c !== column)
+			.forEach((c) => {
+				c.deselect();
+			});
 	}
 
 	_updateLabels(): void {
@@ -43,7 +42,6 @@ export class Table {
 		const contains = this.filters.includes(column);
 		TableSort.log(contains, this.filters);
 		return this.filters.includes(column);
-
 	}
 
 	deselectAll(): void {
@@ -66,7 +64,7 @@ export class Table {
 		if (!this.containsColumn(column)) {
 			this.reset();
 		}
-		
+
 		this.filters.push(column);
 		column.select();
 
@@ -129,8 +127,11 @@ export class Table {
 
 		const tag = element.tagName;
 
-		const cell: HTMLElement | null = (tag == "DIV") ? element.parentElement : element;
-		const siblings = Array.prototype.slice.call(cell?.parentElement?.children);
+		const cell: HTMLElement | null =
+			tag == "DIV" ? element.parentElement : element;
+		const siblings = Array.prototype.slice.call(
+			cell?.parentElement?.children,
+		);
 
 		return siblings.indexOf(cell);
 	}
@@ -145,9 +146,9 @@ export class Table {
 	}
 
 	getTableRows(): HTMLElement[] {
-		this.updateElement()
+		this.updateElement();
 		const rowElements = this.element.querySelectorAll("tr");
-		return Array.from(rowElements).splice(1, rowElements.length);	// excluding thead row
+		return Array.from(rowElements).splice(1, rowElements.length); // excluding thead row
 	}
 
 	removeFilter(column: Column): void {
@@ -181,19 +182,21 @@ export class Table {
 
 		cells.forEach((row, position) => {
 			const isTopRow = position == 0;
-			const isBottomRow = position == (cells.length - 1);
+			const isBottomRow = position == cells.length - 1;
 			const cellType = isTopRow ? "th" : "td";
 
 			// TableSort.log("Selecting column ", row, this.element.querySelector(cellType));
-			const cell = isTopRow ? column.element : row.querySelectorAll(cellType)[column.id];
+			const cell = isTopRow
+				? column.element
+				: row.querySelectorAll(cellType)[column.id];
 
-			const classes = ['is-selected', 'start', 'end'];
+			const classes = ["is-selected", "start", "end"];
 
 			if (isTopRow) {
-				classes.push('top');
+				classes.push("top");
 			}
 			if (isBottomRow) {
-				classes.push('bottom');
+				classes.push("bottom");
 			}
 
 			// TableSort.log(cell);
@@ -211,37 +214,46 @@ export class Table {
 	sort(): void {
 		const compareRows = (rowA: HTMLElement, rowB: HTMLElement) => {
 			for (const filter of this.filters) {
-
-				const cellA = rowA.children[filter.id] as HTMLTableCellElement;
-				const cellB = rowB.children[filter.id] as HTMLTableCellElement;
-
+				const cellA = rowA.children[filter.id];
+				const cellB = rowB.children[filter.id];
 				if (!cellA || !cellB) {
 					return 0;
 				}
-
-				const valueA = cellA.textContent ? cellA.textContent.toLowerCase() : "";
-				const valueB = cellB.textContent ? cellB.textContent.toLowerCase() : "";
-
-				if (valueA < valueB) {
-					return -1 * filter.getWeight();
-				}
-				if (valueA > valueB) {
-					return 1 * filter.getWeight();
+				const valueA = cellA.textContent
+					? cellA.textContent.trim()
+					: "";
+				const valueB = cellB.textContent
+					? cellB.textContent.trim()
+					: "";
+				const numA = parseFloat(valueA);
+				const numB = parseFloat(valueB);
+				const isNumA = !isNaN(numA);
+				const isNumB = !isNaN(numB);
+				if (isNumA && isNumB) {
+					return (numA - numB) * filter.getWeight();
+				} else {
+					if (valueA < valueB) {
+						return -1 * filter.getWeight();
+					}
+					if (valueA > valueB) {
+						return 1 * filter.getWeight();
+					}
 				}
 			}
 			return 0;
 		};
-
 		if (this.filters.length == 0) {
 			this.currentOrder = this.originalOrder;
 		} else {
-			this.currentOrder = Array.from(this.currentOrder).sort((rowA, rowB) => {
-				return compareRows(rowA, rowB);
-			});
-			TableSort.log("[obsidian-table-sorting] sort() - Finished sorting trows.")
+			this.currentOrder = Array.from(this.currentOrder).sort(
+				(rowA: HTMLElement, rowB: HTMLElement) => {
+					return compareRows(rowA, rowB);
+				},
+			);
+			TableSort.log(
+				"[obsidian-table-sorting] sort() - Finished sorting rows.",
+			);
 		}
-
-		// this.removeRows();
 		this.fillTable();
 	}
 
@@ -250,8 +262,7 @@ export class Table {
 			if (!this.containsColumn(column)) {
 				column.deselect();
 				console.log("Deselecting column", column);
-			}
-			else {
+			} else {
 				column.select();
 			}
 			column.update();
@@ -259,9 +270,13 @@ export class Table {
 	}
 
 	updateElement() {
-		const element = document.getElementById(`${idPrefix}${this.id.toString()}`) as HTMLElement;
+		const element = document.getElementById(
+			`${idPrefix}${this.id.toString()}`,
+		) as HTMLElement;
 		if (!element) {
-			console.error("Found no registered table with the corresponding id.");
+			console.error(
+				"Found no registered table with the corresponding id.",
+			);
 		}
 	}
 }
