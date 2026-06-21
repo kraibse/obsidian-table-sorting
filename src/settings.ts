@@ -1,4 +1,4 @@
-import TableSort from "main";
+import TableSort from "../main";
 import { App, PluginSettingTab, Setting } from "obsidian";
 
 
